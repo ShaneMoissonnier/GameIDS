@@ -1,15 +1,27 @@
 package game.common;
 
-import game.areaManager.Direction;
+import java.io.Serializable;
 
-public class Point extends java.awt.Point {
-    public Point(int x, int y) {
-        super(x, y);
+public class Point implements Serializable {
+    private final int row;
+    private final int column;
+
+    public Point(int row, int column) {
+        this.row = row;
+        this.column = column;
+    }
+
+    public int getRow() {
+        return row;
+    }
+
+    public int getColumn() {
+        return column;
     }
 
     @Override
     public String toString() {
-        return this.getX() + ":" + this.getY();
+        return this.getRow() + ":" + this.getColumn();
     }
 
     public String toPlayerId(int id) {
@@ -19,15 +31,28 @@ public class Point extends java.awt.Point {
     public Point getNeighbor(Direction direction) {
         switch (direction) {
             case UP:
-                return new Point(x, y - 1);
+                return new Point(row - 1, column);
             case LEFT:
-                return new Point(x - 1, y);
+                return new Point(row, column - 1);
             case DOWN:
-                return new Point(x, y + 1);
+                return new Point(row + 1, column);
             case RIGHT:
-                return new Point(x + 1, y);
+                return new Point(row, column + 1);
             default:
                 throw new IllegalStateException();
+        }
+    }
+
+    /* Return down -> other is under this */
+    public Direction getDirectionOfNeighbor(Point other) {
+        if (this.row > other.row) {
+            return Direction.UP;
+        } else if (this.row < other.row) {
+            return Direction.DOWN;
+        } else if (this.column > other.column) {
+            return Direction.LEFT;
+        } else {
+            return Direction.RIGHT;
         }
     }
 }

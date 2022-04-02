@@ -2,12 +2,16 @@ package game.player;
 
 import game.common.ClientRabbitMQ;
 
+import java.io.IOException;
+import java.util.concurrent.TimeoutException;
+
 public class Player extends ClientRabbitMQ {
     private final PlayerInfo playerInfo;
 
-    public Player() {
+    public Player() throws IOException, TimeoutException {
         super();
         this.playerInfo = new PlayerInfo();
+        this.run();
     }
 
     @Override
@@ -25,7 +29,7 @@ public class Player extends ClientRabbitMQ {
 
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException, TimeoutException {
         new Player();
     }
 }

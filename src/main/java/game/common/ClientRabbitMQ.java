@@ -15,11 +15,6 @@ public abstract class ClientRabbitMQ {
     protected Channel channel = null;
 
     public ClientRabbitMQ() {
-        try {
-            this.run();
-        } catch (IOException | TimeoutException e) {
-            e.printStackTrace();
-        }
     }
 
     private void setupLogger() {
@@ -57,6 +52,9 @@ public abstract class ClientRabbitMQ {
         logger.info("Connection successful");
     }
 
+    protected void beforeDisconnect() throws IOException {
+    }
+
     private void disconnect() throws IOException, TimeoutException {
         this.logShutdown("Disconnecting from RabbitMQ-Server...");
         this.channel.close();
@@ -66,6 +64,7 @@ public abstract class ClientRabbitMQ {
 
     private void shutdown() {
         try {
+            this.beforeDisconnect();
             this.disconnect();
         } catch (IOException | TimeoutException e) {
             e.printStackTrace();
@@ -79,7 +78,7 @@ public abstract class ClientRabbitMQ {
      * <p>
      * This is where the input loop for the main chat client in console mode is, for example.
      */
-    protected abstract void mainBody();
+    protected abstract void mainBody() throws IOException;
 
     /**
      * This method creates a queue, binds it to an exchanges and links the callback.

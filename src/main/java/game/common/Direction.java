@@ -1,4 +1,4 @@
-package game.areaManager;
+package game.common;
 
 public enum Direction {
     UP,
