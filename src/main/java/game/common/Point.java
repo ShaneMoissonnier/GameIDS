@@ -17,11 +17,17 @@ public class Point extends java.awt.Point {
     }
 
     public Point getNeighbor(Direction direction) {
-        return switch (direction) {
-            case UP -> new Point(x, y - 1);
-            case LEFT -> new Point(x - 1, y);
-            case DOWN -> new Point(x, y + 1);
-            case RIGHT -> new Point(x + 1, y);
-        };
+        switch (direction) {
+            case UP:
+                return new Point(x, y - 1);
+            case LEFT:
+                return new Point(x - 1, y);
+            case DOWN:
+                return new Point(x, y + 1);
+            case RIGHT:
+                return new Point(x + 1, y);
+            default:
+                throw new IllegalStateException();
+        }
     }
 }
