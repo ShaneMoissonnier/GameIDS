@@ -1,7 +1,9 @@
 package game.player;
 
 import game.common.ClientRabbitMQ;
+import game.player.gui.Frame;
 
+import javax.swing.*;
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
@@ -21,7 +23,8 @@ public class Player extends ClientRabbitMQ {
 
     @Override
     protected void subscribeToQueues() {
-
+        // TODO: bind player to dispatcher
+        //this.subscribeToQueue();
     }
 
     @Override
@@ -30,6 +33,8 @@ public class Player extends ClientRabbitMQ {
     }
 
     public static void main(String[] args) throws IOException, TimeoutException {
-        new Player();
+        Player player = new Player();
+        Frame frame = new Frame("GameIDS", player);
+        SwingUtilities.invokeLater(() -> frame.setVisible(true));
     }
 }
