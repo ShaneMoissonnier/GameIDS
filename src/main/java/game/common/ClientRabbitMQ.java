@@ -9,6 +9,8 @@ import java.util.logging.Logger;
 public abstract class ClientRabbitMQ {
     protected static final String HOST = "localhost";
 
+    protected static final String DISPATCHER_EXCHANGE = "dispatcher";
+
     protected Logger logger = null;
 
     protected Connection connection = null;
