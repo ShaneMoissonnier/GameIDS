@@ -2,6 +2,9 @@ package game.player;
 
 import com.rabbitmq.client.Delivery;
 import game.common.ClientRabbitMQ;
+import game.common.Point;
+import game.common.messages.AreaPresenceNotification;
+import game.common.messages.PositionResponse;
 import game.player.gui.Frame;
 
 import javax.swing.*;
@@ -36,6 +39,10 @@ public class Player extends ClientRabbitMQ {
         this.playerInfo.setId(routingKey);
 
         verifyPlayerRequest(areaPosition);
+    }
+
+    private void areaCallback(String s, Delivery delivery) {
+        // TODO
     }
 
     private void verifyPlayerRequest(Point areaPosition) throws IOException {
