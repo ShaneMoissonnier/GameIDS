@@ -17,6 +17,9 @@ import java.util.Vector;
 import java.util.concurrent.TimeoutException;
 
 public class AreaManager extends ClientRabbitMQ {
+    private final String DIRECT_NAME;
+    private final String FANOUT_NAME;
+
     private final Point coordinates;
 
     private int idCounter;
@@ -26,7 +29,11 @@ public class AreaManager extends ClientRabbitMQ {
 
     public AreaManager(Point coordinates) throws IOException, TimeoutException {
         super();
+
         this.coordinates = coordinates;
+        this.DIRECT_NAME = this.coordinates + ":direct";
+        this.FANOUT_NAME = this.coordinates + ":fanout";
+
         this.idCounter = 0;
         this.players = new Vector<>();
         this.neighborsPresent = new HashMap<>();
@@ -55,6 +62,9 @@ public class AreaManager extends ClientRabbitMQ {
 
     @Override
     protected void setupExchanges() throws IOException {
+        this.declareExchange(this.DIRECT_NAME, BuiltinExchangeType.DIRECT);
+        this.declareExchange(this.FANOUT_NAME, BuiltinExchangeType.FANOUT);
+
         for (Direction direction : Direction.values()) {
             this.declareExchange(this.getNeighborExchange(direction), BuiltinExchangeType.DIRECT);
             this.neighborsPresent.put(direction, false);
@@ -70,6 +80,8 @@ public class AreaManager extends ClientRabbitMQ {
 
         this.channel.basicConsume(areaPresenceQueue, true, this::areaPresenceNotificationCallback, consumerTag -> {
         });
+
+        this.subscribeToQueue(this.DIRECT_NAME, this::selfDirectCallback);
     }
 
     private void areaPresenceNotificationCallback(String consumerTag, Delivery delivery) throws IOException {
@@ -94,6 +106,10 @@ public class AreaManager extends ClientRabbitMQ {
                 break;
         }
 
+    }
+
+    private void selfDirectCallback(String consumerTag, Delivery delivery) throws IOException {
+        // TODO
     }
 
     private String getNeighborExchange(Direction direction) {
