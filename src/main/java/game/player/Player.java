@@ -1,5 +1,6 @@
 package game.player;
 
+import com.rabbitmq.client.Delivery;
 import game.common.ClientRabbitMQ;
 import game.player.gui.Frame;
 
@@ -22,9 +23,27 @@ public class Player extends ClientRabbitMQ {
     }
 
     @Override
-    protected void subscribeToQueues() {
-        // TODO: bind player to dispatcher
-        //this.subscribeToQueue();
+    protected void subscribeToQueues() throws IOException {
+        this.subscribeToQueue(DISPATCHER_EXCHANGE, this::dispatcherCallback, null);
+    }
+
+    private void dispatcherCallback(String consumerTag, Delivery delivery) throws IOException {
+        PositionResponse positionResponse = PositionResponse.fromBytes(delivery.getBody());
+        Point areaPosition = positionResponse.getPosition();
+        String directExchange = areaPosition+":direct";
+
+        String routingKey = this.subscribeToQueue(directExchange, this::areaCallback, null);
+        this.playerInfo.setId(routingKey);
+
+        verifyPlayerRequest(areaPosition);
+    }
+
+    private void verifyPlayerRequest(Point areaPosition) throws IOException {
+        AreaPresenceNotification areaNotificationMessage = new AreaPresenceNotification(areaPosition, null, false);
+        String directExchange = areaPosition+":direct";
+
+        channel.basicPublish(directExchange, "area", null, areaNotificationMessage.toBytes());
+        // TODO : UI open connection popup
     }
 
     @Override

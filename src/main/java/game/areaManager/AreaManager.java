@@ -5,8 +5,7 @@ import com.rabbitmq.client.Delivery;
 import game.common.ClientRabbitMQ;
 import game.common.Direction;
 import game.common.Point;
-import game.common.messages.AreaPresenceNotification;
-import game.common.messages.AreaPresenceNotificationType;
+import game.common.messages.*;
 import game.player.PlayerInfo;
 
 import java.io.IOException;
@@ -17,22 +16,18 @@ import java.util.Vector;
 import java.util.concurrent.TimeoutException;
 
 public class AreaManager extends ClientRabbitMQ {
-    private final String DIRECT_NAME;
-    private final String FANOUT_NAME;
+    private String DIRECT_NAME;
+    private String FANOUT_NAME;
 
-    private final Point coordinates;
+    private Point coordinates;
 
     private int idCounter;
     private final List<PlayerInfo> players;
 
     private final Map<Direction, Boolean> neighborsPresent;
 
-    public AreaManager(Point coordinates) throws IOException, TimeoutException {
+    public AreaManager() throws IOException, TimeoutException {
         super();
-
-        this.coordinates = coordinates;
-        this.DIRECT_NAME = this.coordinates + ":direct";
-        this.FANOUT_NAME = this.coordinates + ":fanout";
 
         this.idCounter = 0;
         this.players = new Vector<>();
@@ -53,6 +48,22 @@ public class AreaManager extends ClientRabbitMQ {
         for (Direction direction : Direction.values()) {
             this.notifyNeighbor(direction, type, false);
         }
+    }
+
+    @Override
+    protected void afterConnect() throws IOException {
+        String key = this.subscribeToQueue(DISPATCHER_EXCHANGE, this::dispatcherCallback, null);
+        this.channel.basicPublish(DISPATCHER_EXCHANGE, "dispatcher", null, new QueryPosition(key, SenderType.AREA).toBytes());
+    }
+
+    private void dispatcherCallback(String consumerTag, Delivery delivery) throws IOException {
+        PositionResponse response = PositionResponse.fromBytes(delivery.getBody());
+        
+        this.coordinates = response.getPosition();
+        this.DIRECT_NAME = this.coordinates + ":direct";
+        this.FANOUT_NAME = this.coordinates + ":fanout";
+        logger.info("Received position : " + this.coordinates);
+        this.afterDispatch();
     }
 
     @Override
@@ -81,12 +92,12 @@ public class AreaManager extends ClientRabbitMQ {
         this.channel.basicConsume(areaPresenceQueue, true, this::areaPresenceNotificationCallback, consumerTag -> {
         });
 
-        this.subscribeToQueue(this.DIRECT_NAME, this::selfDirectCallback);
+        this.subscribeToQueue(this.DIRECT_NAME, this::selfDirectCallback, "area");
     }
 
     private void areaPresenceNotificationCallback(String consumerTag, Delivery delivery) throws IOException {
         AreaPresenceNotification presenceNotification = AreaPresenceNotification.fromBytes(delivery.getBody());
-        Point otherCoords = presenceNotification.getSenderCoordinates();
+        Point otherCoords = presenceNotification.getCoordinates();
         Direction direction = this.coordinates.getDirectionOfNeighbor(otherCoords);
 
         switch (presenceNotification.getType()) {
@@ -135,15 +146,6 @@ public class AreaManager extends ClientRabbitMQ {
     }
 
     public static void main(String[] args) throws IOException, TimeoutException {
-        if (args.length != 2) {
-            System.out.println("Error : Please provide 2 integers");
-            return;
-        }
-
-        int x = Integer.parseInt(args[0]);
-        int y = Integer.parseInt(args[1]);
-        Point coords = new Point(x, y);
-
-        new AreaManager(coords);
+        new AreaManager();
     }
 }

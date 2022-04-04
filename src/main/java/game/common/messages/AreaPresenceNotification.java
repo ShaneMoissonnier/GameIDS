@@ -3,14 +3,14 @@ package game.common.messages;
 import game.common.Point;
 
 public class AreaPresenceNotification extends Message {
-    private final Point senderCoordinates;
+    private final Point coordinates;
     private final AreaPresenceNotificationType type;
 
     private final Boolean isResponse;
 
-    public AreaPresenceNotification(Point senderCoordinates, AreaPresenceNotificationType type, Boolean isResponse) {
-        super(senderCoordinates.toString());
-        this.senderCoordinates = senderCoordinates;
+    public AreaPresenceNotification(Point coordinates, AreaPresenceNotificationType type, Boolean isResponse) {
+        super(coordinates.toString());
+        this.coordinates = coordinates;
         this.type = type;
         this.isResponse = isResponse;
     }
@@ -19,8 +19,8 @@ public class AreaPresenceNotification extends Message {
         return (AreaPresenceNotification) Message.fromBytes(bytes);
     }
 
-    public Point getSenderCoordinates() {
-        return senderCoordinates;
+    public Point getCoordinates() {
+        return coordinates;
     }
 
     public AreaPresenceNotificationType getType() {

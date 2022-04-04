@@ -1,28 +1,42 @@
 package game;
 
 import com.rabbitmq.client.BuiltinExchangeType;
+import com.rabbitmq.client.Delivery;
 import game.common.ClientRabbitMQ;
 import game.common.Point;
+import game.common.messages.PositionResponse;
+import game.common.messages.QueryPosition;
+import game.common.messages.SenderType;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Random;
 import java.util.Vector;
+import java.util.concurrent.TimeoutException;
 
 public class Dispatcher extends ClientRabbitMQ {
-    private final List<Point> zones;
+    private final Random random;
 
-    public Dispatcher() {
-        zones = new Vector<>();
+    private final List<List<Boolean>> areas;
+
+    public Dispatcher() throws IOException, TimeoutException {
+        random = new Random();
+
+        areas = new Vector<>();
+        areas.add(new Vector<>());
+        areas.get(0).add(false);
+
+        this.run();
+        this.afterDispatch();
     }
 
     @Override
-    protected void mainBody() throws IOException {
-
+    protected void mainBody() {
     }
 
     @Override
     protected void subscribeToQueues() throws IOException {
-
+        this.subscribeToQueue(DISPATCHER_EXCHANGE, this::queryPositionCallback, "dispatcher");
     }
 
     @Override
@@ -30,7 +44,73 @@ public class Dispatcher extends ClientRabbitMQ {
         this.declareExchange(DISPATCHER_EXCHANGE, BuiltinExchangeType.DIRECT);
     }
 
-    public static void main(String[] args) {
+    private Point findHole() {
+        int row_max = areas.size();
+        int col_max = areas.get(0).size();
+
+        for (int i = 0; i < row_max; i++) {
+            for (int j = 0; j < col_max; j++) {
+                if (!this.areas.get(i).get(j)) {
+                    logger.info("Hole found : " + i + ", " + j);
+                    System.out.println(areas);
+                    return new Point(i, j);
+                }
+            }
+        }
+
+
+        return null;
+    }
+
+    private Point randomArea() {
+        int row_max = areas.size();
+        int col_max = areas.get(0).size();
+
+        int row;
+        int col;
+
+        do {
+            row = random.nextInt(row_max);
+            col = random.nextInt(col_max);
+        } while (!this.areas.get(row).get(col));
+
+        return new Point(row, col);
+    }
+
+    private void resizeZones() {
+        logger.info("Resizing matrix");
+        for (List<Boolean> row : areas) {
+            row.add(false);
+        }
+
+        int size = areas.get(0).size();
+        areas.add(new Vector<>());
+        for (int i = 0; i < size; i++) {
+            areas.get(size - 1).add(false);
+        }
+    }
+
+    private void queryPositionCallback(String consumerTag, Delivery delivery) throws IOException {
+        QueryPosition query = QueryPosition.fromBytes(delivery.getBody());
+
+        Point res;
+
+        if (query.type == SenderType.AREA) {
+            res = findHole();
+            if (res == null) {
+                this.resizeZones();
+                res = findHole();
+            }
+            this.areas.get(res.getRow()).set(res.getColumn(), true);
+        } else {
+            res = randomArea();
+        }
+
+        PositionResponse response = new PositionResponse(res);
+        this.channel.basicPublish(DISPATCHER_EXCHANGE, query.senderId, null, response.toBytes());
+    }
+
+    public static void main(String[] args) throws IOException, TimeoutException {
         new Dispatcher();
     }
 }

@@ -54,6 +54,9 @@ public abstract class ClientRabbitMQ {
         logger.info("Connection successful");
     }
 
+    protected void afterConnect() throws IOException {
+    }
+
     protected void beforeDisconnect() throws IOException {
     }
 
@@ -89,18 +92,16 @@ public abstract class ClientRabbitMQ {
      * @param callback   The callback used to consume from the queue
      * @param routingKey The routing queue used to bind the que to the exchange
      */
-    protected void subscribeToQueue(String exchange, DeliverCallback callback, String routingKey) throws IOException {
+    protected String subscribeToQueue(String exchange, DeliverCallback callback, String routingKey) throws IOException {
         String queueName = channel.queueDeclare().getQueue();
+        if (routingKey == null) {
+            routingKey = queueName;
+        }
         channel.queueBind(queueName, exchange, routingKey);
         channel.basicConsume(queueName, true, callback, consumerTag -> {
         });
-    }
 
-    /**
-     * Same as {@link ClientRabbitMQ#subscribeToQueue(String, DeliverCallback, String)}, but without a routing key.
-     */
-    protected void subscribeToQueue(String exchange, DeliverCallback callback) throws IOException {
-        this.subscribeToQueue(exchange, callback, "");
+        return routingKey;
     }
 
     /**
@@ -125,6 +126,11 @@ public abstract class ClientRabbitMQ {
         this.connect();
 
         this.setupLogger();
+
+        this.afterConnect();
+    }
+
+    protected void afterDispatch() throws IOException {
         this.setupExchanges();
         this.subscribeToQueues();
         this.mainBody();
