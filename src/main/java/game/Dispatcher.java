@@ -4,6 +4,7 @@ import com.rabbitmq.client.BuiltinExchangeType;
 import com.rabbitmq.client.Delivery;
 import game.common.ClientRabbitMQ;
 import game.common.Point;
+import game.common.messages.AreaPresenceNotification;
 import game.common.messages.PositionResponse;
 import game.common.messages.QueryPosition;
 import game.common.messages.SenderType;
@@ -37,6 +38,7 @@ public class Dispatcher extends ClientRabbitMQ {
     @Override
     protected void subscribeToQueues() throws IOException {
         this.subscribeToQueue(DISPATCHER_EXCHANGE, this::queryPositionCallback, "dispatcher");
+        this.subscribeToQueue(DISPATCHER_EXCHANGE, this::areaLogoutCallback, "dispatcher_logout");
     }
 
     @Override
@@ -108,6 +110,13 @@ public class Dispatcher extends ClientRabbitMQ {
 
         PositionResponse response = new PositionResponse(res);
         this.channel.basicPublish(DISPATCHER_EXCHANGE, query.senderId, null, response.toBytes());
+    }
+
+    private void areaLogoutCallback(String consumerTag, Delivery delivery) {
+        AreaPresenceNotification msg = AreaPresenceNotification.fromBytes(delivery.getBody());
+        Point coordinates = msg.getCoordinates();
+        this.areas.get(coordinates.getRow()).set(coordinates.getColumn(), false);
+        logger.info("Area at coordinates " + coordinates + " disconnected");
     }
 
     public static void main(String[] args) throws IOException, TimeoutException {

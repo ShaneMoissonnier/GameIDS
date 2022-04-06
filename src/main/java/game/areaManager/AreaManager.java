@@ -143,6 +143,9 @@ public class AreaManager extends ClientRabbitMQ {
     @Override
     protected void beforeDisconnect() throws IOException {
         this.notifyNeighbors(AreaPresenceNotificationType.LOGOUT);
+
+        AreaPresenceNotification msg = new AreaPresenceNotification(this.coordinates, AreaPresenceNotificationType.LOGOUT, false);
+        this.channel.basicPublish(DISPATCHER_EXCHANGE, "dispatcher_logout", null, msg.toBytes());
     }
 
     public static void main(String[] args) throws IOException, TimeoutException {
