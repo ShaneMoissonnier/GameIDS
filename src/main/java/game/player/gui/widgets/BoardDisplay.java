@@ -16,13 +16,14 @@ public class BoardDisplay extends Board {
 
     public BoardDisplay() {
         this.boardModel = new BoardModel();
-        testToken();
         this.rowCount = boardModel.getRow();
         this.columnCount = boardModel.getColumn();
 
         this.loadImages();
 
         this.cells = new ArrayList<>(columnCount * rowCount);
+
+        this.testToken();
     }
 
     protected void loadImages() {
@@ -39,7 +40,8 @@ public class BoardDisplay extends Board {
     }
 
     protected void testToken() {
-        Token token = new Token(Color.black, 60);
+        Token token = new Token(Color.black, 60, this.playerToken);
+        this.boardModel.setCurrentToken(token);
         this.boardModel.putTokenOn(token, new Point(0, 0));
         this.boardModel.moveToken(token, new Point(2, 4));
     }
@@ -61,7 +63,7 @@ public class BoardDisplay extends Board {
 
                 if (this.boardModel.hasToken(position)) {
                     Token token = this.boardModel.getToken(position);
-                    drawImage(this.playerToken, x + (cellWidth - token.getSize())/2, y + (cellHeight - token.getSize())/2, token.getSize(), token.getSize());
+                    drawImage(token.getImage(), x + (cellWidth - token.getSize())/2, y + (cellHeight - token.getSize())/2, token.getSize(), token.getSize());
                 }
             }
         }
