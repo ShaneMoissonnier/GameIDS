@@ -5,8 +5,6 @@ import game.common.ClientRabbitMQ;
 import game.common.Point;
 import game.common.messages.AreaPresenceNotification;
 import game.common.messages.PositionResponse;
-import game.common.messages.QueryPosition;
-import game.common.messages.SenderType;
 import game.player.gui.Frame;
 import game.player.gui.model.BoardModel;
 

@@ -1,7 +1,5 @@
 package game.player.gui.global;
 
-import game.player.gui.widgets.ImageDisplay;
-
 import javax.imageio.ImageIO;
 import java.io.IOException;
 import java.net.URL;

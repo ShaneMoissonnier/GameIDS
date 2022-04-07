@@ -1,4 +1,4 @@
-package game.player;
+package game.player.gui.global;
 
 public enum Directions {
     NORTH,

@@ -1,6 +1,6 @@
 package game.player.gui.interaction;
 
-import game.player.Directions;
+import game.player.gui.global.Directions;
 import game.player.gui.model.BoardModel;
 import game.player.gui.widgets.BoardDisplay;
 
@@ -21,6 +21,10 @@ public class Interaction implements KeyListener {
 
     @Override
     public void keyPressed(KeyEvent e) {
+        // No player's token on board
+        if (this.boardModel.getCurrentToken() == null)
+            return;
+
         int keyCode = e.getKeyCode();
         switch( keyCode ) {
             case KeyEvent.VK_UP:

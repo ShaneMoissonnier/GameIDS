@@ -2,11 +2,10 @@ package game.player.gui.model;
 
 import java.awt.Point;
 
-import game.player.Directions;
+import game.player.gui.global.Directions;
 import game.player.Player;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class BoardModel {
 

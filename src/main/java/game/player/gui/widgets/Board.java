@@ -3,6 +3,7 @@ package game.player.gui.widgets;
 import javax.swing.*;
 import java.awt.*;
 
+import game.player.gui.global.ImageDisplay;
 import game.player.gui.model.BoardModel;
 
 public abstract class Board extends JComponent {
