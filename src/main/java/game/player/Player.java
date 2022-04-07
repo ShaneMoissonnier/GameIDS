@@ -3,12 +3,8 @@ package game.player;
 import com.rabbitmq.client.Delivery;
 import game.common.ClientRabbitMQ;
 import game.common.Point;
-import game.common.messages.AreaPresenceNotification;
-import game.common.messages.PositionResponse;
-import game.common.messages.QueryPosition;
-import game.common.messages.SenderType;
+import game.common.messages.*;
 import game.player.gui.Frame;
-import game.player.gui.model.BoardModel;
 
 import javax.swing.*;
 import java.io.IOException;
@@ -16,70 +12,66 @@ import java.util.concurrent.TimeoutException;
 
 public class Player extends ClientRabbitMQ {
     private final PlayerInfo playerInfo;
-    private Frame frame;
-    private BoardModel boardModel;
 
-    public Player(Frame frame) throws IOException, TimeoutException {
+    private String areaDirectExchange;
+
+    public Player() throws IOException, TimeoutException {
         super();
         this.playerInfo = new PlayerInfo();
-        this.frame = frame;
-        // TODO : a bit hacky, need refactoring
-        this.boardModel = this.frame.getBoardDisplay().getModel();
         this.run();
     }
 
-    @Override
-    protected void mainBody() {
+    public void interactWithDispatcher() throws IOException {
+        String id = this.subscribeToQueue(DISPATCHER_EXCHANGE, this::dispatcherCallback, null);
+        this.playerInfo.setId(id);
 
-    }
-
-    @Override
-    protected void subscribeToQueues() throws IOException {
-        this.subscribeToQueue(DISPATCHER_EXCHANGE, this::dispatcherCallback, null);
+        QueryPosition queryPosition = new QueryPosition(this.playerInfo.getId(), SenderType.PLAYER);
+        this.channel.basicPublish(DISPATCHER_EXCHANGE, "dispatcher", null, queryPosition.toBytes());
     }
 
     private void dispatcherCallback(String consumerTag, Delivery delivery) throws IOException {
-        PositionResponse positionResponse = PositionResponse.fromBytes(delivery.getBody());
+        ResponsePosition positionResponse = ResponsePosition.fromBytes(delivery.getBody());
         Point areaPosition = positionResponse.getPosition();
-        String directExchange = areaPosition+":direct";
+        logger.info("Connecting to area at position : " + areaPosition);
 
-        String routingKey = this.subscribeToQueue(directExchange, this::areaCallback, null);
+        this.areaDirectExchange = areaPosition + ":direct";
+        String areaFanoutExchange = areaPosition + ":fanout";
+
+        this.subscribeToQueue(areaFanoutExchange, this::othersPositionUpdateCallback, null);
+        String routingKey = this.subscribeToQueue(this.areaDirectExchange, this::areaLoginCallback, null);
         this.playerInfo.setId(routingKey);
 
-        verifyPlayerRequest(areaPosition);
+        this.verifyPlayerRequest();
     }
 
-    private void verifyPlayerRequest(Point areaPosition) throws IOException {
-        AreaPresenceNotification areaNotificationMessage = new AreaPresenceNotification(areaPosition, null, false);
-        String directExchange = areaPosition+":direct";
+    private void othersPositionUpdateCallback(String s, Delivery delivery) {
+        // TODO
+    }
 
-        channel.basicPublish(directExchange, "area", null, areaNotificationMessage.toBytes());
+    private void verifyPlayerRequest() throws IOException {
+        PlayerPresNotif areaNotifMessage = new PlayerPresNotif(this.playerInfo.getId(), NotificationType.LOGIN);
+        channel.basicPublish(this.areaDirectExchange, "area_player_presence", null, areaNotifMessage.toBytes());
         // TODO : UI open connection popup
         //JOptionPane.showMessageDialog(frame, "Connexion en cours", "Information", JOptionPane.INFORMATION_MESSAGE);
     }
 
-    private void areaCallback(String consumerTag, Delivery delivery) {
-        AreaPresenceNotification areaPresenceNotification = AreaPresenceNotification.fromBytes(delivery.getBody());
-        Point playerPosition = areaPresenceNotification.getCoordinates();
+    private void areaLoginCallback(String consumerTag, Delivery delivery) {
+        ResponsePosition response = ResponsePosition.fromBytes(delivery.getBody());
+        Point playerPosition = response.getPosition();
         this.playerInfo.setPosition(playerPosition);
+        logger.info("Connected to area, spawned at position " + playerPosition);
         // TODO : UI close  connection popup
     }
 
-    public void askDispatcher() throws IOException {
-        /*String queueName = channel.queueDeclare().getQueue();
-        QueryPosition queryPosition = new QueryPosition(queueName, SenderType.PLAYER);
-        channel.basicPublish(DISPATCHER_EXCHANGE, "dispatcher", null, queryPosition.toBytes());*/
-    }
-
     @Override
-    protected void setupExchanges() {
-
+    protected void beforeDisconnect() throws IOException {
+        PlayerPresNotif notif = new PlayerPresNotif(this.playerInfo.getId(), NotificationType.LOGOUT);
+        this.channel.basicPublish(this.areaDirectExchange, "area_player_presence", null, notif.toBytes());
     }
 
     public static void main(String[] args) throws IOException, TimeoutException {
-        Frame frame = new Frame("GameIDS");
-        Player player = new Player(frame);
-        frame.setPlayer(player);
+        Player player = new Player();
+        Frame frame = new Frame("GameIDS", player);
 
         SwingUtilities.invokeLater(() -> frame.setVisible(true));
     }

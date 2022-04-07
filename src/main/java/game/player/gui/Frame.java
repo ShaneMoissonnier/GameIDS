@@ -15,7 +15,7 @@ public class Frame extends JFrame {
     private BoardDisplay boardDisplay;
     private Player player;
 
-    public Frame(String title) {
+    public Frame(String title, Player player) {
         super(title);
         instance = this;
 
@@ -33,6 +33,9 @@ public class Frame extends JFrame {
         addKeyListener(new Interaction(this.boardDisplay));
 
         this.add(panel);
+
+        this.setPlayer(player);
+
         pack();
     }
 

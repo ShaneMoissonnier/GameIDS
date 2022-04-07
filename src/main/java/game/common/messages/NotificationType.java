@@ -1,6 +1,6 @@
 package game.common.messages;
 
-public enum AreaPresenceNotificationType {
+public enum NotificationType {
     LOGIN,
     LOGOUT
 }

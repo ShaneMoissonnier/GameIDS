@@ -44,7 +44,12 @@ public abstract class ClientRabbitMQ {
         }
     }
 
-    private void connect() throws IOException, TimeoutException {
+    protected void beforeConnect() {
+        this.setupLogger();
+        Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
+    }
+
+    protected void connect() throws IOException, TimeoutException {
         logger.info("Connecting to RabbitMQ-Server...");
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost(HOST);
@@ -52,9 +57,6 @@ public abstract class ClientRabbitMQ {
         this.connection = factory.newConnection();
         this.channel = connection.createChannel();
         logger.info("Connection successful");
-    }
-
-    protected void afterConnect() throws IOException {
     }
 
     protected void beforeDisconnect() throws IOException {
@@ -76,14 +78,6 @@ public abstract class ClientRabbitMQ {
         }
         MyLogManager.resetFinally();
     }
-
-
-    /**
-     * The actual body of the client.
-     * <p>
-     * This is where the input loop for the main chat client in console mode is, for example.
-     */
-    protected abstract void mainBody() throws IOException;
 
     /**
      * This method creates a queue, binds it to an exchanges and links the callback.
@@ -107,32 +101,26 @@ public abstract class ClientRabbitMQ {
     /**
      * This method creates the common queues (system and messages), binds them and subscribe to them.
      */
-    protected abstract void subscribeToQueues() throws IOException;
+    protected void subscribeToQueues() throws IOException {
+    }
 
     protected void declareExchange(String name, BuiltinExchangeType type) throws IOException {
         channel.exchangeDeclare(name, type, false, true, null);
     }
 
-    protected abstract void setupExchanges() throws IOException;
+    protected void setupExchanges() throws IOException {
+    }
 
+    protected void interactWithDispatcher() throws IOException {
+    }
 
     /**
      * The client's main method. It manages the flow of the client's execution.
      */
     protected void run() throws IOException, TimeoutException {
-        this.setupLogger();
-        Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
-
+        this.beforeConnect();
         this.connect();
 
-        this.setupLogger();
-
-        this.afterConnect();
-    }
-
-    protected void afterDispatch() throws IOException {
-        this.setupExchanges();
-        this.subscribeToQueues();
-        this.mainBody();
+        this.interactWithDispatcher();
     }
 }

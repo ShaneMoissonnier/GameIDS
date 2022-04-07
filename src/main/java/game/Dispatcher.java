@@ -4,9 +4,9 @@ import com.rabbitmq.client.BuiltinExchangeType;
 import com.rabbitmq.client.Delivery;
 import game.common.ClientRabbitMQ;
 import game.common.Point;
-import game.common.messages.AreaPresenceNotification;
-import game.common.messages.PositionResponse;
+import game.common.messages.AreaPresNotif;
 import game.common.messages.QueryPosition;
+import game.common.messages.ResponsePosition;
 import game.common.messages.SenderType;
 
 import java.io.IOException;
@@ -29,11 +29,15 @@ public class Dispatcher extends ClientRabbitMQ {
         areas.get(0).add(false);
 
         this.run();
-        this.afterDispatch();
     }
 
     @Override
-    protected void mainBody() {
+    protected void run() throws IOException, TimeoutException {
+        this.beforeConnect();
+        this.connect();
+
+        this.setupExchanges();
+        this.subscribeToQueues();
     }
 
     @Override
@@ -54,8 +58,6 @@ public class Dispatcher extends ClientRabbitMQ {
         for (int i = 0; i < row_max; i++) {
             for (int j = 0; j < col_max; j++) {
                 if (!this.areas.get(i).get(j)) {
-                    logger.info("Hole found : " + i + ", " + j);
-                    System.out.println(areas);
                     return new Point(i, j);
                 }
             }
@@ -98,7 +100,8 @@ public class Dispatcher extends ClientRabbitMQ {
 
         Point res;
 
-        if (query.type == SenderType.AREA) {
+        if (query.getType() == SenderType.AREA) {
+            logger.info("An area logged in");
             res = findHole();
             if (res == null) {
                 this.resizeZones();
@@ -107,18 +110,20 @@ public class Dispatcher extends ClientRabbitMQ {
                     throw new NoSuchElementException("Fatal error : could not resize the grid");
                 }
             }
+            logger.info("Found free space at position " + res);
             this.areas.get(res.getRow()).set(res.getColumn(), true);
         } else {
             res = randomArea();
+            logger.info("A player logged in, redirecting to area at position " + res);
         }
 
-        PositionResponse response = new PositionResponse(res);
-        this.channel.basicPublish(DISPATCHER_EXCHANGE, query.senderId, null, response.toBytes());
+        ResponsePosition response = new ResponsePosition(res);
+        this.channel.basicPublish(DISPATCHER_EXCHANGE, query.getSenderId(), null, response.toBytes());
     }
 
     private void areaLogoutCallback(String consumerTag, Delivery delivery) {
-        AreaPresenceNotification msg = AreaPresenceNotification.fromBytes(delivery.getBody());
-        Point coordinates = msg.getCoordinates();
+        AreaPresNotif msg = AreaPresNotif.fromBytes(delivery.getBody());
+        Point coordinates = msg.getPosition();
         this.areas.get(coordinates.getRow()).set(coordinates.getColumn(), false);
         logger.info("Area at coordinates " + coordinates + " disconnected");
     }
