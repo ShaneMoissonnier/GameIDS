@@ -11,6 +11,7 @@ import game.common.messages.SenderType;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Random;
 import java.util.Vector;
 import java.util.concurrent.TimeoutException;
@@ -102,6 +103,9 @@ public class Dispatcher extends ClientRabbitMQ {
             if (res == null) {
                 this.resizeZones();
                 res = findHole();
+                if (res == null) {
+                    throw new NoSuchElementException("Fatal error : could not resize the grid");
+                }
             }
             this.areas.get(res.getRow()).set(res.getColumn(), true);
         } else {
