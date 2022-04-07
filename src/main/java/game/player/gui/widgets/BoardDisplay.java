@@ -1,5 +1,5 @@
 package game.player.gui.widgets;
-import game.player.gui.global.ImageLoader;
+import game.player.gui.global.Global;
 import game.player.gui.model.BoardModel;
 import game.player.gui.model.Token;
 
@@ -7,28 +7,21 @@ import java.awt.*;
 import java.util.ArrayList;
 
 public class BoardDisplay extends Board {
-    ImageDisplay playerToken;
-    ImageDisplay tileGrass;
-
     private int columnCount;
     private int rowCount;
     private ArrayList<Rectangle> cells;
+    private Global global;
 
     public BoardDisplay() {
+        global = new Global();
+
         this.boardModel = new BoardModel();
         this.rowCount = boardModel.getRow();
         this.columnCount = boardModel.getColumn();
 
-        this.loadImages();
-
         this.cells = new ArrayList<>(columnCount * rowCount);
 
         this.testToken();
-    }
-
-    protected void loadImages() {
-        this.playerToken = ImageLoader.readImage("token_penguin");
-        this.tileGrass = ImageLoader.readImage("tileGrass");
     }
 
     public BoardModel getModel() { return this.boardModel; }
@@ -40,7 +33,7 @@ public class BoardDisplay extends Board {
     }
 
     protected void testToken() {
-        Token token = new Token(Color.black, 60, this.playerToken);
+        Token token = new Token(Color.black, 60, this.global.getRandomSkin());
         this.boardModel.setCurrentToken(token);
         this.boardModel.putTokenOn(token, new Point(0, 0));
         this.boardModel.moveToken(token, new Point(2, 4));
@@ -81,7 +74,7 @@ public class BoardDisplay extends Board {
 
         for (int row = 0; row < rowCount; row++) {
             for (int col = 0; col < columnCount; col++) {
-                drawImage(this.tileGrass, x + (col * cellWidth), y + (row * cellHeight), cellWidth, cellHeight);
+                drawImage(Global.tileGrass, x + (col * cellWidth), y + (row * cellHeight), cellWidth, cellHeight);
                 drawEmptyRect(Color.DARK_GRAY,x + (col * cellWidth), y + (row * cellHeight), cellWidth, cellHeight, 10);
             }
         }

@@ -5,6 +5,8 @@ import com.formdev.flatlaf.intellijthemes.materialthemeuilite.FlatAtomOneDarkCon
 import game.player.Player;
 import game.player.gui.interaction.Interaction;
 import game.player.gui.widgets.BoardDisplay;
+import game.player.gui.widgets.ConnectionButtons;
+import game.player.gui.widgets.HeaderPanel;
 
 import java.awt.*;
 import java.awt.event.WindowEvent;
@@ -25,12 +27,22 @@ public class Frame extends JFrame {
         setPreferredSize(new Dimension(800, 800));
         setLocationRelativeTo(null);
 
-        JPanel panel = new JPanel();
-        panel.setLayout(new BorderLayout());
         this.boardDisplay = new BoardDisplay();
-        panel.add(this.boardDisplay, BorderLayout.CENTER);
 
-        addKeyListener(new Interaction(this.boardDisplay));
+        HeaderPanel header = new HeaderPanel();
+        ConnectionButtons connection = new ConnectionButtons(this.player);
+        JPanel panel = new JPanel();
+
+        panel.setLayout(new BorderLayout());
+        panel.add(this.boardDisplay, BorderLayout.CENTER);
+        panel.add(header, BorderLayout.NORTH);
+        panel.add(connection, BorderLayout.SOUTH);
+
+        Interaction interaction = new Interaction(this.boardDisplay);
+        addKeyListener(interaction);
+        connection.setListener(interaction);
+
+        this.setFocusable(true);
 
         this.add(panel);
 

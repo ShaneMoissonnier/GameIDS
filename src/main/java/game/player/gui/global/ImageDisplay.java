@@ -1,4 +1,4 @@
-package game.player.gui.widgets;
+package game.player.gui.global;
 
 import java.awt.*;
 

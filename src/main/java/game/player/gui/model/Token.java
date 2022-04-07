@@ -1,6 +1,6 @@
 package game.player.gui.model;
 
-import game.player.gui.widgets.ImageDisplay;
+import game.player.gui.global.ImageDisplay;
 
 import java.awt.*;
 
