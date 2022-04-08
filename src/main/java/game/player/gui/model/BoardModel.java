@@ -2,7 +2,7 @@ package game.player.gui.model;
 
 import java.awt.Point;
 
-import game.player.gui.global.Directions;
+import game.common.Direction;
 import game.player.Player;
 
 import java.util.ArrayList;
@@ -83,21 +83,21 @@ public class BoardModel {
         this.grid[endPos.x][endPos.y].addToken(token);
     }
 
-    public void moveTokenWithDirection(Token token, Directions directions) {
+    public void moveTokenWithDirection(Token token, Direction directions) {
 
         Point currentPosition = (Point) token.getTile().getPosition().clone();
 
         switch (directions) {
-            case NORTH:
+            case UP:
                 currentPosition.y -= 1;
                 break;
-            case SOUTH:
+            case DOWN:
                 currentPosition.y += 1;
                 break;
-            case WEST:
+            case LEFT:
                 currentPosition.x -= 1;
                 break;
-            case EAST:
+            case RIGHT:
                 currentPosition.x += 1;
                 break;
         }

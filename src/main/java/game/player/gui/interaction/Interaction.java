@@ -1,6 +1,6 @@
 package game.player.gui.interaction;
 
-import game.player.gui.global.Directions;
+import game.common.Direction;
 import game.player.gui.model.BoardModel;
 import game.player.gui.widgets.BoardDisplay;
 
@@ -28,16 +28,16 @@ public class Interaction implements KeyListener {
         int keyCode = e.getKeyCode();
         switch( keyCode ) {
             case KeyEvent.VK_UP:
-                this.boardModel.moveTokenWithDirection(this.boardModel.getCurrentToken(), Directions.NORTH);
+                this.boardModel.moveTokenWithDirection(this.boardModel.getCurrentToken(), Direction.UP);
                 break;
             case KeyEvent.VK_DOWN:
-                this.boardModel.moveTokenWithDirection(this.boardModel.getCurrentToken(), Directions.SOUTH);
+                this.boardModel.moveTokenWithDirection(this.boardModel.getCurrentToken(), Direction.DOWN);
                 break;
             case KeyEvent.VK_LEFT:
-                this.boardModel.moveTokenWithDirection(this.boardModel.getCurrentToken(), Directions.WEST);
+                this.boardModel.moveTokenWithDirection(this.boardModel.getCurrentToken(), Direction.LEFT);
                 break;
             case KeyEvent.VK_RIGHT :
-                this.boardModel.moveTokenWithDirection(this.boardModel.getCurrentToken(), Directions.EAST);
+                this.boardModel.moveTokenWithDirection(this.boardModel.getCurrentToken(), Direction.RIGHT);
                 break;
         }
         this.boardDisplay.repaint();
