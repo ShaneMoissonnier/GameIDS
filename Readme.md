@@ -22,7 +22,7 @@
          mvn compile
     ```
 
-    > Do not forget to run RabbitMQ server before running the relay and the client:
+    > Do not forget to run RabbitMQ server before running the dispatcher and the client:
 
     ```console
          sudo rabbitmq-server
