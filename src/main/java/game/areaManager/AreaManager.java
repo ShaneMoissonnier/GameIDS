@@ -5,11 +5,14 @@ import com.rabbitmq.client.Delivery;
 import game.common.ClientRabbitMQ;
 import game.common.Direction;
 import game.common.Point;
+import game.common.boardModel.BoardModel;
+import game.common.boardModel.Token;
 import game.common.messages.*;
-import game.player.PlayerInfo;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.TimeoutException;
 
 public class AreaManager extends ClientRabbitMQ {
@@ -23,8 +26,8 @@ public class AreaManager extends ClientRabbitMQ {
 
     private Point coordinates;
 
-    private final Map<String, PlayerInfo> players;
-    private final List<List<String>> map;
+    private final Map<String, Point> players;
+    private final BoardModel boardModel;
 
     private final Map<Direction, Boolean> neighborsPresent;
 
@@ -34,15 +37,16 @@ public class AreaManager extends ClientRabbitMQ {
         this.players = new HashMap<>();
         this.neighborsPresent = new HashMap<>();
 
-        this.map = new Vector<>();
-        for (int i = 0; i < N_ROWS; i++) {
-            map.add(new Vector<>());
-            for (int j = 0; j < N_COLUMNS; j++) {
-                map.get(i).add(null);
-            }
-        }
+        boardModel = new BoardModel();
 
-        this.run();
+        this.beforeConnect();
+        this.connect();
+        this.interactWithDispatcher();
+    }
+
+    private void notifyPlayers() throws IOException {
+        BoardUpdate message = new BoardUpdate(this.boardModel);
+        this.channel.basicPublish(this.FANOUT_NAME, "", null, message.toBytes());
     }
 
     private void notifyNeighbor(Direction direction, NotificationType type, String routingKey) throws IOException {
@@ -84,11 +88,11 @@ public class AreaManager extends ClientRabbitMQ {
 
     @Override
     protected void setupExchanges() throws IOException {
-        this.declareExchange(this.DIRECT_NAME, BuiltinExchangeType.DIRECT);
-        this.declareExchange(this.FANOUT_NAME, BuiltinExchangeType.FANOUT);
+        this.declareDirectExchange(this.DIRECT_NAME);
+        this.declareExchange(this.FANOUT_NAME, BuiltinExchangeType.FANOUT, false);
 
         for (Direction direction : Direction.values()) {
-            this.declareExchange(this.getNeighborExchange(direction), BuiltinExchangeType.DIRECT);
+            this.declareDirectExchange(this.getNeighborExchange(direction));
             this.neighborsPresent.put(direction, false);
         }
     }
@@ -147,13 +151,15 @@ public class AreaManager extends ClientRabbitMQ {
     private Point randomFreeTile() {
         int row;
         int col;
+        Point tile;
 
         do {
             row = random.nextInt(N_ROWS);
             col = random.nextInt(N_COLUMNS);
-        } while (this.map.get(row).get(col) != null);
+            tile = new Point(row, col);
+        } while (this.boardModel.hasToken(tile));
 
-        return new Point(row, col);
+        return tile;
     }
 
     private void playerPresenceCallback(String consumerTag, Delivery delivery) throws IOException {
@@ -163,13 +169,23 @@ public class AreaManager extends ClientRabbitMQ {
             case LOGIN:
                 Point pos = this.randomFreeTile();
                 this.logger.info("Player logged in : spawning them on tile " + pos);
-                this.map.get(pos.getRow()).set(pos.getColumn(), notif.getSenderId());
+
+                this.players.put(notif.getSenderId(), pos);
+                this.boardModel.putTokenOn(new Token(), pos);
+
                 ResponsePosition responsePosition = new ResponsePosition(pos);
                 this.channel.basicPublish(DIRECT_NAME, notif.getSenderId(), null, responsePosition.toBytes());
+
+                this.notifyPlayers();
                 break;
             case LOGOUT:
                 logger.info("Player '" + notif.getSenderId() + "' logged out.");
+
+                Point position = this.players.get(notif.getSenderId());
                 this.players.remove(notif.getSenderId());
+                this.boardModel.removeTokenAt(position);
+
+                this.notifyPlayers();
                 break;
         }
     }
@@ -202,6 +218,8 @@ public class AreaManager extends ClientRabbitMQ {
 
         AreaPresNotif msg = new AreaPresNotif(this.coordinates, NotificationType.LOGOUT);
         this.channel.basicPublish(DISPATCHER_EXCHANGE, "dispatcher_logout", null, msg.toBytes());
+
+        this.channel.exchangeDelete(FANOUT_NAME);
     }
 
     private String getPresenceNotificationKey() {

@@ -3,8 +3,7 @@ package game.player.gui.widgets;
 import javax.swing.*;
 import java.awt.*;
 
-import game.player.gui.global.ImageDisplay;
-import game.player.gui.model.BoardModel;
+import game.common.boardModel.BoardModel;
 
 public abstract class Board extends JComponent {
 
@@ -13,8 +12,8 @@ public abstract class Board extends JComponent {
 
     abstract void updateBoard();
 
-    protected void drawImage(ImageDisplay img, int x, int y, int width, int heigth) {
-        gPaint.drawImage(img.getImage(), x, y, width, heigth, null);
+    protected void drawImage(Image img, int x, int y, int width, int height) {
+        gPaint.drawImage(img, x, y, width, height, null);
     }
 
     protected void drawCircle(Color c, int x, int y, int width, int height) {

@@ -104,23 +104,17 @@ public abstract class ClientRabbitMQ {
     protected void subscribeToQueues() throws IOException {
     }
 
-    protected void declareExchange(String name, BuiltinExchangeType type) throws IOException {
-        channel.exchangeDeclare(name, type, false, true, null);
+    protected void declareExchange(String name, BuiltinExchangeType type, boolean autodelete) throws IOException {
+        channel.exchangeDeclare(name, type, false, autodelete, null);
+    }
+
+    protected void declareDirectExchange(String name) throws IOException {
+        this.declareExchange(name, BuiltinExchangeType.DIRECT, true);
     }
 
     protected void setupExchanges() throws IOException {
     }
 
     protected void interactWithDispatcher() throws IOException {
-    }
-
-    /**
-     * The client's main method. It manages the flow of the client's execution.
-     */
-    protected void run() throws IOException, TimeoutException {
-        this.beforeConnect();
-        this.connect();
-
-        this.interactWithDispatcher();
     }
 }

@@ -1,6 +1,5 @@
 package game;
 
-import com.rabbitmq.client.BuiltinExchangeType;
 import com.rabbitmq.client.Delivery;
 import game.common.ClientRabbitMQ;
 import game.common.Point;
@@ -31,7 +30,6 @@ public class Dispatcher extends ClientRabbitMQ {
         this.run();
     }
 
-    @Override
     protected void run() throws IOException, TimeoutException {
         this.beforeConnect();
         this.connect();
@@ -48,7 +46,7 @@ public class Dispatcher extends ClientRabbitMQ {
 
     @Override
     protected void setupExchanges() throws IOException {
-        this.declareExchange(DISPATCHER_EXCHANGE, BuiltinExchangeType.DIRECT);
+        this.declareDirectExchange(DISPATCHER_EXCHANGE);
     }
 
     private Point findHole() {

@@ -8,9 +8,10 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 
 public class ConnectionButtons extends JPanel implements ActionListener {
-    private Player player;
+    private final Player player;
     private static JButton m_connectButton;
     private static JButton m_disconnectButton;
 
@@ -41,8 +42,8 @@ public class ConnectionButtons extends JPanel implements ActionListener {
     }
 
     public void setListener(Interaction interaction) {
-        this.m_connectButton.addKeyListener(interaction);
-        this.m_disconnectButton.addKeyListener(interaction);
+        m_connectButton.addKeyListener(interaction);
+        m_disconnectButton.addKeyListener(interaction);
     }
 
     public static void setLoggedIn() {
@@ -56,11 +57,21 @@ public class ConnectionButtons extends JPanel implements ActionListener {
     }
 
     public void login() {
-
+        try {
+            this.player.interactWithDispatcher();
+            setLoggedIn();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void logout() {
-
+        try {
+            this.player.disconnectFromArea();
+            setLoggedOut();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

@@ -11,14 +11,29 @@ import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
 public class Player extends ClientRabbitMQ {
+    private Frame frame;
+
     private final PlayerInfo playerInfo;
 
+    private boolean isLoggedIn;
+
     private String areaDirectExchange;
+    private String areaFanoutExchange;
+
+    private String exchangeDirectQueue;
+    private String exchangeFanoutQueue;
 
     public Player() throws IOException, TimeoutException {
         super();
         this.playerInfo = new PlayerInfo();
-        this.run();
+        this.isLoggedIn = false;
+
+        this.beforeConnect();
+        this.connect();
+    }
+
+    private void setFrame(Frame frame) {
+        this.frame = frame;
     }
 
     public void interactWithDispatcher() throws IOException {
@@ -35,17 +50,18 @@ public class Player extends ClientRabbitMQ {
         logger.info("Connecting to area at position : " + areaPosition);
 
         this.areaDirectExchange = areaPosition + ":direct";
-        String areaFanoutExchange = areaPosition + ":fanout";
+        this.areaFanoutExchange = areaPosition + ":fanout";
 
-        this.subscribeToQueue(areaFanoutExchange, this::othersPositionUpdateCallback, null);
-        String routingKey = this.subscribeToQueue(this.areaDirectExchange, this::areaLoginCallback, null);
-        this.playerInfo.setId(routingKey);
+        this.exchangeFanoutQueue = this.subscribeToQueue(areaFanoutExchange, this::othersPositionUpdateCallback, null);
+        this.exchangeDirectQueue = this.subscribeToQueue(this.areaDirectExchange, this::areaLoginCallback, null);
+        this.playerInfo.setId(this.exchangeDirectQueue);
 
         this.verifyPlayerRequest();
     }
 
     private void othersPositionUpdateCallback(String s, Delivery delivery) {
-        // TODO
+        BoardUpdate message = BoardUpdate.fromBytes(delivery.getBody());
+        this.frame.setBoardModel(message.getModel());
     }
 
     private void verifyPlayerRequest() throws IOException {
@@ -59,19 +75,39 @@ public class Player extends ClientRabbitMQ {
         ResponsePosition response = ResponsePosition.fromBytes(delivery.getBody());
         Point playerPosition = response.getPosition();
         this.playerInfo.setPosition(playerPosition);
+        this.isLoggedIn = true;
         logger.info("Connected to area, spawned at position " + playerPosition);
         // TODO : UI close  connection popup
     }
 
-    @Override
-    protected void beforeDisconnect() throws IOException {
+    public void disconnectFromArea() throws IOException {
+        this.channel.queueUnbind(this.exchangeDirectQueue, this.areaDirectExchange, this.exchangeDirectQueue);
+        this.channel.queueUnbind(this.exchangeFanoutQueue, this.areaFanoutExchange, this.exchangeFanoutQueue);
+
         PlayerPresNotif notif = new PlayerPresNotif(this.playerInfo.getId(), NotificationType.LOGOUT);
         this.channel.basicPublish(this.areaDirectExchange, "area_player_presence", null, notif.toBytes());
+
+        this.areaDirectExchange = null;
+        this.areaFanoutExchange = null;
+        this.exchangeDirectQueue = null;
+        this.exchangeFanoutQueue = null;
+
+        this.isLoggedIn = false;
+
+        this.frame.setBoardModel(null);
+    }
+
+    @Override
+    protected void beforeDisconnect() throws IOException {
+        if (this.isLoggedIn) {
+            this.disconnectFromArea();
+        }
     }
 
     public static void main(String[] args) throws IOException, TimeoutException {
         Player player = new Player();
         Frame frame = new Frame("GameIDS", player);
+        player.setFrame(frame);
 
         SwingUtilities.invokeLater(() -> frame.setVisible(true));
     }

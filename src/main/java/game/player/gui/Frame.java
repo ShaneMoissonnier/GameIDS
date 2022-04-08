@@ -2,6 +2,7 @@ package game.player.gui;
 
 import javax.swing.*;
 import com.formdev.flatlaf.intellijthemes.materialthemeuilite.FlatAtomOneDarkContrastIJTheme;
+import game.common.boardModel.BoardModel;
 import game.player.Player;
 import game.player.gui.interaction.Interaction;
 import game.player.gui.widgets.BoardDisplay;
@@ -14,11 +15,13 @@ import java.awt.event.WindowEvent;
 public class Frame extends JFrame {
 
     private static Frame instance;
-    private BoardDisplay boardDisplay;
+    private final BoardDisplay boardDisplay;
     private Player player;
 
     public Frame(String title, Player player) {
         super(title);
+        this.setPlayer(player);
+
         instance = this;
 
         FlatAtomOneDarkContrastIJTheme.setup();
@@ -45,10 +48,11 @@ public class Frame extends JFrame {
         this.setFocusable(true);
 
         this.add(panel);
-
-        this.setPlayer(player);
-
         pack();
+    }
+
+    public void setBoardModel(BoardModel model) {
+        this.getBoardDisplay().setBoardModel(model);
     }
 
     public BoardDisplay getBoardDisplay() {

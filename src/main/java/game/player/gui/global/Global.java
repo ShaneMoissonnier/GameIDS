@@ -1,12 +1,13 @@
 package game.player.gui.global;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Random;
 
 public class Global {
 
-    private ArrayList<ImageDisplay> skinList;
-    public static ImageDisplay tileGrass = ImageLoader.readImage("tileGrass");
+    private final ArrayList<String> skinList;
+    public static Image tileGrass = ImageLoader.readImage("tileGrass");
 
     public Global() {
         skinList = new ArrayList<>();
@@ -14,23 +15,23 @@ public class Global {
     }
 
     private void loadSkins() {
-        skinList.add(ImageLoader.readImage("penguin"));
-        skinList.add(ImageLoader.readImage("pig"));
-        skinList.add(ImageLoader.readImage("snake"));
-        skinList.add(ImageLoader.readImage("elephant"));
-        skinList.add(ImageLoader.readImage("panda"));
-        skinList.add(ImageLoader.readImage("monkey"));
-        skinList.add(ImageLoader.readImage("giraffe"));
-        skinList.add(ImageLoader.readImage("parrot"));
-        skinList.add(ImageLoader.readImage("rabbit"));
+        skinList.add("penguin");
+        skinList.add("pig");
+        skinList.add("snake");
+        skinList.add("elephant");
+        skinList.add("panda");
+        skinList.add("monkey");
+        skinList.add("giraffe");
+        skinList.add("parrot");
+        skinList.add("rabbit");
     }
 
-    public ImageDisplay getRandomSkin() {
+    public String getRandomSkin() {
        int randomIndex = new Random().nextInt(this.skinList.size());
        return this.skinList.get(randomIndex);
     }
 
-    public ArrayList<ImageDisplay> getSkinList() {
+    public ArrayList<String> getSkinList() {
         return this.skinList;
     }
 }
