@@ -4,7 +4,7 @@ import game.common.Direction;
 import game.common.Point;
 
 public class QueryMove extends Query {
-    private final Point position;
+    private Point position;
     private final Direction direction;
 
     public QueryMove(String senderId, Point position, Direction direction) {
@@ -16,6 +16,8 @@ public class QueryMove extends Query {
     public Point getPosition() {
         return position;
     }
+
+    public void setPosition(Point position) { this.position = position; }
 
     public Direction getDirection() {
         return direction;
