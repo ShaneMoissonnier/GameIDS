@@ -7,6 +7,8 @@ import game.common.Direction;
 import game.common.Point;
 import game.common.messages.*;
 import game.player.PlayerInfo;
+import game.player.gui.model.BoardModel;
+import game.player.gui.model.Tile;
 
 import java.io.IOException;
 import java.util.*;
@@ -97,20 +99,109 @@ public class AreaManager extends ClientRabbitMQ {
     protected void subscribeToQueues() throws IOException {
         String areaPresenceQueue = this.channel.queueDeclare().getQueue();
         String areaPresenceResponseQueue = this.channel.queueDeclare().getQueue();
+
+        String areaRequestMoveQueue = this.channel.queueDeclare().getQueue();
+        String areaResponseMoveQueue = this.channel.queueDeclare().getQueue();
+
         for (Direction direction : Direction.values()) {
             this.channel.queueBind(areaPresenceQueue, this.getNeighborExchange(direction), this.getPresenceNotificationKey());
             this.channel.queueBind(areaPresenceResponseQueue, this.getNeighborExchange(direction), this.getPresenceResponseKey());
+
+            this.channel.queueBind(areaRequestMoveQueue, this.getNeighborExchange(direction), this.getRequestMoveKey());
+            this.channel.queueBind(areaResponseMoveQueue, this.getNeighborExchange(direction), this.getResponseMoveKey());
         }
 
-        this.channel.basicConsume(areaPresenceQueue, true, this::areaPresenceNotificationCallback, consumerTag -> {
-        });
-        this.channel.basicConsume(areaPresenceResponseQueue, true, this::areaPresenceResponseCallback, consumerTag -> {
-        });
+        this.channel.basicConsume(areaPresenceQueue, true, this::areaPresenceNotificationCallback, consumerTag -> {});
+        this.channel.basicConsume(areaPresenceResponseQueue, true, this::areaPresenceResponseCallback, consumerTag -> {});
+
+        this.channel.basicConsume(areaRequestMoveQueue, true, this::areaMoveReceptionCallback, consumerTag -> {});
+        this.channel.basicConsume(areaResponseMoveQueue, true, this::areaMoveResponseCallback, consumerTag -> {});
 
         this.subscribeToQueue(this.DIRECT_NAME, this::playerPresenceCallback, "area_player_presence");
     }
 
-    private void areaPresenceResponseCallback(String consumerTag, Delivery delivery) {
+    private Point convertToLocalPosition(Point position, Direction direction) {
+        switch (direction) {
+            case UP:
+                return new Point(position.getColumn(), 0);
+            case DOWN:
+                return new Point(position.getColumn(), N_ROWS-1);
+            case LEFT:
+                return new Point(0, position.getRow());
+            case RIGHT:
+                return new Point(N_COLUMNS-1, position.getRow());
+            default:
+                return null;
+        }
+    }
+
+    // At this point playerMove contains the requested position by the player
+    private void sendMoveToOutboundArea(QueryMove playerMove) throws IOException {
+        Direction currentDirection = playerMove.getDirection();
+        String outBoundAreaExchange = getNeighborExchange(currentDirection);
+
+        channel.basicPublish(
+                outBoundAreaExchange,
+                this.getRequestMoveKey(currentDirection),
+                null,
+                playerMove.toBytes()
+        );
+        logger.info("The area at coordinates (" + this.coordinates + ") send player's move to area at coordinates ("+outBoundAreaExchange+")");
+    }
+
+    private void areaMoveReceptionCallback(String consumerTag, Delivery delivery) throws IOException {
+        QueryMove queryMove = QueryMove.fromBytes(delivery.getBody());
+
+        String querySenderId = queryMove.getSenderId();
+        Point queryPosition = queryMove.getPosition();
+        Direction currentDirection = queryMove.getDirection();
+
+        // Find sender area
+        Direction opposDirection = queryPosition.getOppositeDirection(currentDirection);
+
+        // Convert requested position to local coordinate in outbound area
+        Point convertedLocalPos = convertToLocalPosition(queryPosition, currentDirection);
+        QueryMove convertedQueryMove = new QueryMove(querySenderId, convertedLocalPos, currentDirection);
+
+
+        // Check if position is available
+        BoardModel boardModel = new BoardModel(); //  remove this when global instance is setup
+
+
+        Point convertedPosition = convertedQueryMove.getPosition();
+        Tile tile = new Tile(convertedPosition.getColumn(),convertedPosition.getRow());
+
+        boardModel.setTileAvailable(tile, true);
+
+        ResponseMove responseMove;
+        if (boardModel.isTileAvailable(tile)) {
+            responseMove = new ResponseMove(true, queryMove.getPosition());
+        } else {
+            responseMove = new ResponseMove(false, queryMove.getPosition());
+        }
+
+        String outBoundAreaExchange = getNeighborExchange(opposDirection);
+
+        logger.info(outBoundAreaExchange);
+
+        channel.basicPublish(
+                outBoundAreaExchange,
+                this.getResponseMoveKey(opposDirection),
+                null,
+                responseMove.toBytes()
+        );
+
+        logger.info("the area at "+this.coordinates+" receives response for move request at " + queryMove.getPosition() + " in "+queryMove.getDirection().name().toLowerCase()+" direction");
+    }
+
+    private void areaMoveResponseCallback(String consumerTag, Delivery delivery) {
+        ResponseMove responseMove = ResponseMove.fromBytes(delivery.getBody());
+        // TODO : send response to player
+        // TODO : published new boardModel
+        System.out.println(responseMove.isStatus());
+    }
+
+    private void areaPresenceResponseCallback(String consumerTag, Delivery delivery) throws IOException {
         AreaPresNotif presNotif = AreaPresNotif.fromBytes(delivery.getBody());
         Point otherCoords = presNotif.getPosition();
         Direction direction = this.coordinates.getDirectionOfNeighbor(otherCoords);
@@ -202,6 +293,18 @@ public class AreaManager extends ClientRabbitMQ {
 
         AreaPresNotif msg = new AreaPresNotif(this.coordinates, NotificationType.LOGOUT);
         this.channel.basicPublish(DISPATCHER_EXCHANGE, "dispatcher_logout", null, msg.toBytes());
+    }
+
+    private String getRequestMoveKey() {return this.coordinates + ":move_request";}
+
+    private String getRequestMoveKey(Direction direction) {
+        return this.coordinates.getNeighbor(direction) + ":move_request";
+    }
+
+    private String getResponseMoveKey() { return this.coordinates + ":move_response";}
+
+    private String getResponseMoveKey(Direction direction) {
+        return this.coordinates.getNeighbor(direction) + ":move_response";
     }
 
     private String getPresenceNotificationKey() {

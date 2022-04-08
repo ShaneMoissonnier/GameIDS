@@ -43,6 +43,21 @@ public class Point implements Serializable {
         }
     }
 
+    public Direction getOppositeDirection(Direction direction) {
+        switch (direction) {
+            case UP:
+                return Direction.DOWN;
+            case DOWN:
+                return Direction.UP;
+            case LEFT:
+                return Direction.RIGHT;
+            case RIGHT:
+                return Direction.LEFT;
+            default:
+                throw new IllegalStateException();
+        }
+    }
+
     /* Return down -> other is under this */
     public Direction getDirectionOfNeighbor(Point other) {
         if (this.row > other.row) {

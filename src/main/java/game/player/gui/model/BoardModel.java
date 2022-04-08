@@ -9,8 +9,8 @@ import java.util.ArrayList;
 
 public class BoardModel {
 
-    private final int row = 6;
-    private final int column = 6;
+    private static final int row = 6;
+    private static final int column = 6;
 
     private Tile[][] grid;
     private ArrayList<Player> players;
@@ -24,12 +24,12 @@ public class BoardModel {
         initBoard();
     }
 
-    public int getRow() {
-        return this.row;
+    public static int getRow() {
+        return row;
     }
 
-    public int getColumn() {
-        return this.column;
+    public static int getColumn() {
+        return column;
     }
 
     public void initBoard() {
@@ -49,8 +49,8 @@ public class BoardModel {
         }
     }
 
-    public boolean isOutbounds(Point position) {
-        return  (position.x >= this.getRow() || position.x < 0 || position.y >= this.getColumn() || position.y < 0);
+    public static boolean isOutbounds(Point position) {
+        return  (position.x >= getRow() || position.x < 0 || position.y >= getColumn() || position.y < 0);
     }
 
     public boolean hasToken(Point pos) {
@@ -138,5 +138,9 @@ public class BoardModel {
 
     public void setTileAvailable(Tile tile, boolean status) {
         this.tilesAvailables[tile.getPosition().x][tile.getPosition().y] = status;
+    }
+
+    public boolean isTileAvailable(Tile tile) {
+        return this.tilesAvailables[tile.getPosition().x][tile.getPosition().y];
     }
 }
