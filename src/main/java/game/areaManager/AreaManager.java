@@ -157,6 +157,7 @@ public class AreaManager extends ClientRabbitMQ {
                 null,
                 new QueryTileAvailable(playerMove.getSenderId(), remoteDest, convertedDirection).toBytes()
         );
+        logger.info("The area at coordinates (" + this.coordinates + ") send player's move to area at exchange ("+outBoundAreaExchange+")");
         logger.info("The area at coordinates (" + this.coordinates + ") send player's move to area at coordinates (" + outBoundAreaExchange + ")");
     }
 
