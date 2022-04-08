@@ -146,7 +146,7 @@ public class AreaManager extends ClientRabbitMQ {
                 null,
                 playerMove.toBytes()
         );
-        logger.info("The area at coordinates (" + this.coordinates + ") send player's move to area at coordinates ("+outBoundAreaExchange+")");
+        logger.info("The area at coordinates (" + this.coordinates + ") send player's move to area at exchange ("+outBoundAreaExchange+")");
     }
 
     private void areaMoveReceptionCallback(String consumerTag, Delivery delivery) throws IOException {
