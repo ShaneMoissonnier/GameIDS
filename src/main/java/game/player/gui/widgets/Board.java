@@ -16,47 +16,22 @@ public abstract class Board extends JComponent {
         gPaint.drawImage(img, x, y, width, height, null);
     }
 
-    protected void drawCircle(Color c, int x, int y, int width, int height) {
-        gPaint.setPaint(c);
-        gPaint.fillOval(x, y, width, height);
-    }
-
-    protected void drawFullRect(Color c, int x, int y, int width, int heigth) {
-        gPaint.setPaint(c);
-        gPaint.fillRect(x, y, width, heigth);
-    }
-
-    protected void drawEmptyRect(Color borderColor, int x, int y, int width, int heigth)  {
-        Rectangle cell = new Rectangle(x,y, width, heigth);
-        gPaint.setColor(borderColor);
+    protected void drawEmptyRect(int x, int y, int width, int height)  {
+        Rectangle cell = new Rectangle(x,y, width, height);
+        gPaint.setColor(Color.DARK_GRAY);
+        gPaint.setStroke(new BasicStroke(10));
         gPaint.draw(cell);
     }
 
-    protected void drawEmptyRect(Color borderColor, int x, int y, int width, int heigth, int thickness)  {
-        Rectangle cell = new Rectangle(x,y, width, heigth);
-        gPaint.setColor(borderColor);
-        gPaint.setStroke(new BasicStroke(thickness));
-        gPaint.draw(cell);
-    }
-
-    protected void setBackgroundColor(Color c) {
-        gPaint.setBackground(c);
-    }
-
-    protected void drawText(String text, int x, int y, Color color) {
-        gPaint.setColor(color);
-        gPaint.drawString(text, x, y);
-    }
-
-    public void moveWithAnimation(Point position) {
-
+    protected void setBackgroundColor() {
+        gPaint.setBackground(Color.DARK_GRAY);
     }
 
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         gPaint = (Graphics2D) g;
-        this.setBackgroundColor(Color.DARK_GRAY);
+        this.setBackgroundColor();
         g.clearRect(0, 0, getWidth(), getHeight());
         this.updateBoard();
     }

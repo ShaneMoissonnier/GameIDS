@@ -2,16 +2,20 @@ package game.player.gui.interaction;
 
 import game.common.Direction;
 import game.common.boardModel.BoardModel;
+import game.player.Player;
 import game.player.gui.widgets.BoardDisplay;
 
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.io.IOException;
 
 public class Interaction implements KeyListener {
+    private final Player player;
     private final BoardDisplay boardDisplay;
 
-    public Interaction(BoardDisplay boardDisplay) {
+    public Interaction(BoardDisplay boardDisplay, Player player) {
         this.boardDisplay = boardDisplay;
+        this.player = player;
     }
 
     @Override
@@ -24,10 +28,6 @@ public class Interaction implements KeyListener {
             // Not logged in
             return;
         }
-
-        // No player's token on board
-        if (model.getCurrentTokenPosition() == null)
-            return;
 
         Direction direction;
 
@@ -49,8 +49,11 @@ public class Interaction implements KeyListener {
                 return;
         }
 
-        model.moveCurrentToken(direction);
-        this.boardDisplay.repaint();
+        try {
+            this.player.tryToMove(direction);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
     }
 
     @Override

@@ -67,7 +67,8 @@ public class ConnectionButtons extends JPanel implements ActionListener {
 
     public void logout() {
         try {
-            this.player.disconnectFromArea();
+            this.player.disconnectFromArea(true);
+            HeaderPanel.setLabelText("Not logged in");
             setLoggedOut();
         } catch (IOException e) {
             e.printStackTrace();

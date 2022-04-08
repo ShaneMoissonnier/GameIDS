@@ -5,8 +5,6 @@ import game.player.gui.global.Global;
 import game.common.boardModel.BoardModel;
 import game.common.boardModel.Token;
 
-import java.awt.*;
-
 public class BoardDisplay extends Board {
     public BoardDisplay() {
     }
@@ -36,7 +34,7 @@ public class BoardDisplay extends Board {
         for (int row = 0; row < rowCount; row++) {
             for (int col = 0; col < columnCount; col++) {
                 drawImage(Global.tileGrass, x_grass + (col * cellWidth), y_grass + (row * cellHeight), cellWidth, cellHeight);
-                drawEmptyRect(Color.DARK_GRAY, x_grass + (col * cellWidth), y_grass + (row * cellHeight), cellWidth, cellHeight, 10);
+                drawEmptyRect(x_grass + (col * cellWidth), y_grass + (row * cellHeight), cellWidth, cellHeight);
 
                 int x = col * cellWidth;
                 int y = row * cellHeight;
@@ -52,6 +50,12 @@ public class BoardDisplay extends Board {
 
     public void setBoardModel(BoardModel model) {
         this.boardModel = model;
+
+        if (model != null) {
+            Point position = model.getAreaPosition();
+            HeaderPanel.setLabelText("(" + position.getRow() + ", " + position.getColumn() + ")");
+        }
+
         this.repaint();
     }
 }

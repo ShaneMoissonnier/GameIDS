@@ -95,13 +95,7 @@ public abstract class ClientRabbitMQ {
         channel.basicConsume(queueName, true, callback, consumerTag -> {
         });
 
-        return routingKey;
-    }
-
-    /**
-     * This method creates the common queues (system and messages), binds them and subscribe to them.
-     */
-    protected void subscribeToQueues() throws IOException {
+        return queueName;
     }
 
     protected void declareExchange(String name, BuiltinExchangeType type, boolean autodelete) throws IOException {
@@ -110,11 +104,5 @@ public abstract class ClientRabbitMQ {
 
     protected void declareDirectExchange(String name) throws IOException {
         this.declareExchange(name, BuiltinExchangeType.DIRECT, true);
-    }
-
-    protected void setupExchanges() throws IOException {
-    }
-
-    protected void interactWithDispatcher() throws IOException {
     }
 }

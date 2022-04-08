@@ -24,10 +24,6 @@ public class Point implements Serializable {
         return this.getRow() + ":" + this.getColumn();
     }
 
-    public String toPlayerId(int id) {
-        return this + ":" + id;
-    }
-
     public Point getNeighbor(Direction direction) {
         switch (direction) {
             case UP:
@@ -43,7 +39,7 @@ public class Point implements Serializable {
         }
     }
 
-    public Direction getOppositeDirection(Direction direction) {
+    public static Direction getOppositeDirection(Direction direction) {
         switch (direction) {
             case UP:
                 return Direction.DOWN;

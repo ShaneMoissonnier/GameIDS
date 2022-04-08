@@ -7,7 +7,7 @@ import java.util.Random;
 public class Global {
 
     private final ArrayList<String> skinList;
-    public static Image tileGrass = ImageLoader.readImage("tileGrass");
+    public static final Image tileGrass = ImageLoader.readImage("tileGrass");
 
     public Global() {
         skinList = new ArrayList<>();
@@ -29,9 +29,5 @@ public class Global {
     public String getRandomSkin() {
        int randomIndex = new Random().nextInt(this.skinList.size());
        return this.skinList.get(randomIndex);
-    }
-
-    public ArrayList<String> getSkinList() {
-        return this.skinList;
     }
 }

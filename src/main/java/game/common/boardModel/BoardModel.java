@@ -1,20 +1,28 @@
 package game.common.boardModel;
 
-import game.common.Direction;
 import game.common.Point;
 
 import java.io.Serializable;
 
 public class BoardModel implements Serializable {
+    private Point areaPosition;
+
     private final int rows = 6;
     private final int columns = 6;
 
     private final Token[][] grid;
-    private Point currentTokenPosition;
 
     public BoardModel() {
         this.grid = new Token[rows][columns];
         initBoard();
+    }
+
+    public void setAreaPosition(Point areaPosition) {
+        this.areaPosition = areaPosition;
+    }
+
+    public Point getAreaPosition() {
+        return areaPosition;
     }
 
     public int getRows() {
@@ -41,37 +49,25 @@ public class BoardModel implements Serializable {
         return this.grid[pos.getRow()][pos.getColumn()] != null;
     }
 
-    public Token getToken(Point pos) {
-        return this.grid[pos.getRow()][pos.getColumn()];
+    public boolean isTileAvailable(Point pos) {
+        return !this.hasToken(pos);
     }
 
-    public void moveCurrentToken(Direction direction) {
-        Point dest = this.currentTokenPosition.getNeighbor(direction);
-
-        // TODO add manager verification
-        if (this.isOutbounds(dest)) {
-            return;
-        }
-
-        Token token = this.getToken(this.currentTokenPosition);
-        this.putTokenOn(token, dest);
-        this.removeTokenAt(this.currentTokenPosition);
-        this.currentTokenPosition = dest;
+    public Token getToken(Point pos) {
+        return this.grid[pos.getRow()][pos.getColumn()];
     }
 
     public void putTokenOn(Token token, Point pos) {
         this.grid[pos.getRow()][pos.getColumn()] = token;
     }
 
-    public void setCurrentTokenPosition(Point position) {
-        this.currentTokenPosition = position;
-    }
-
-    public Point getCurrentTokenPosition() {
-        return this.currentTokenPosition;
-    }
-
     public void removeTokenAt(Point position) {
         this.grid[position.getRow()][position.getColumn()] = null;
+    }
+
+    public void moveToken(Point start, Point dest) {
+        Token token = this.getToken(start);
+        this.removeTokenAt(start);
+        this.putTokenOn(token, dest);
     }
 }

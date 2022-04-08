@@ -1,6 +1,5 @@
 package game.player.gui;
 
-import javax.swing.*;
 import com.formdev.flatlaf.intellijthemes.materialthemeuilite.FlatAtomOneDarkContrastIJTheme;
 import game.common.boardModel.BoardModel;
 import game.player.Player;
@@ -9,20 +8,16 @@ import game.player.gui.widgets.BoardDisplay;
 import game.player.gui.widgets.ConnectionButtons;
 import game.player.gui.widgets.HeaderPanel;
 
+import javax.swing.*;
 import java.awt.*;
-import java.awt.event.WindowEvent;
 
 public class Frame extends JFrame {
-
-    private static Frame instance;
     private final BoardDisplay boardDisplay;
     private Player player;
 
     public Frame(String title, Player player) {
         super(title);
         this.setPlayer(player);
-
-        instance = this;
 
         FlatAtomOneDarkContrastIJTheme.setup();
 
@@ -41,7 +36,7 @@ public class Frame extends JFrame {
         panel.add(header, BorderLayout.NORTH);
         panel.add(connection, BorderLayout.SOUTH);
 
-        Interaction interaction = new Interaction(this.boardDisplay);
+        Interaction interaction = new Interaction(this.boardDisplay, this.player);
         addKeyListener(interaction);
         connection.setListener(interaction);
 
@@ -61,9 +56,5 @@ public class Frame extends JFrame {
 
     public void setPlayer(Player player) {
         this.player = player;
-    }
-
-    public static void close() {
-        instance.dispatchEvent(new WindowEvent(instance, WindowEvent.WINDOW_CLOSING));
     }
 }

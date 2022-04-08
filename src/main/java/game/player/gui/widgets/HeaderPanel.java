@@ -11,18 +11,20 @@ public class HeaderPanel extends JPanel {
         BorderLayout borderLayout = new BorderLayout();
         setLayout(borderLayout);
 
-        this.label = new JLabel("Header Zone : (0, 0)");
-        this.label.setPreferredSize(new Dimension(this.label.getWidth(), 50));
+        label = new JLabel();
+        setLabelText("Not logged in");
 
-        this.label.setForeground(Color.white);
-        this.label.setFont(new Font(this.label.getFont().getName(), Font.PLAIN, 25 ));
-        this.label.setHorizontalAlignment(JLabel.CENTER);
+        label.setPreferredSize(new Dimension(label.getWidth(), 50));
+
+        label.setForeground(Color.white);
+        label.setFont(new Font(label.getFont().getName(), Font.PLAIN, 25 ));
+        label.setHorizontalAlignment(JLabel.CENTER);
 
         add(label, BorderLayout.CENTER);
     }
 
     public static void setLabelText(String text) {
-        label.setText(text);
+        label.setText("Header Zone : " + text);
     }
 }
 

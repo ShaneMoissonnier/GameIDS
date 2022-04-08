@@ -38,14 +38,12 @@ public class Dispatcher extends ClientRabbitMQ {
         this.subscribeToQueues();
     }
 
-    @Override
-    protected void subscribeToQueues() throws IOException {
+    private void subscribeToQueues() throws IOException {
         this.subscribeToQueue(DISPATCHER_EXCHANGE, this::queryPositionCallback, "dispatcher");
         this.subscribeToQueue(DISPATCHER_EXCHANGE, this::areaLogoutCallback, "dispatcher_logout");
     }
 
-    @Override
-    protected void setupExchanges() throws IOException {
+    private void setupExchanges() throws IOException {
         this.declareDirectExchange(DISPATCHER_EXCHANGE);
     }
 
