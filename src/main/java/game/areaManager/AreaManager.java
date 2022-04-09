@@ -8,7 +8,6 @@ import game.common.Point;
 import game.common.boardModel.BoardModel;
 import game.common.boardModel.Token;
 import game.common.messages.*;
-import game.player.Player;
 
 import java.io.IOException;
 import java.util.*;
@@ -123,7 +122,7 @@ public class AreaManager extends ClientRabbitMQ {
      * This callback method is called when the dispatcher reply to the request sent in the {@link #interactWithDispatcher()}
      * method.
      *
-     * @param delivery Holds a serializes {@link ResponsePosition} message.
+     * @param delivery Holds a serialized {@link ResponsePosition} message.
      */
     private void dispatcherCallback(String consumerTag, Delivery delivery) throws IOException {
         ResponsePosition response = ResponsePosition.fromBytes(delivery.getBody());
@@ -203,10 +202,18 @@ public class AreaManager extends ClientRabbitMQ {
         this.subscribeToQueue(this.DIRECT_NAME, this::playerNeighborsCallback, "area_player_neighbors");
     }
 
+    /**
+     * This callback method is called when we receive a {@link QueryNeighbors} message.
+     * <p>
+     * Such messages are sent by players when they wish to know who their neighbors are, if they have any.
+     *
+     * @param delivery A serialized {@link QueryNeighbors} message.
+     */
     private void playerNeighborsCallback(String consumerTag, Delivery delivery) throws IOException {
         QueryNeighbors queryNeighbors = (QueryNeighbors) QueryNeighbors.fromBytes(delivery.getBody());
         String senderId = queryNeighbors.getSenderId();
         Point playerPosition = players.get(senderId);
+        logger.info("The player '" + senderId + "' requested a list of its neighbors");
 
         Map<Direction, PlayerInfos> neighborsList = getPlayerNeighborsMap(playerPosition);
 
@@ -214,14 +221,20 @@ public class AreaManager extends ClientRabbitMQ {
 
         this.channel.basicPublish(
                 DIRECT_NAME,
-                senderId+":neighbors_notify",
+                senderId + ":neighbors_notify",
                 null,
                 responseNeighbors.toBytes()
         );
 
-        logger.info("The area at coordinates (" + this.coordinates + ") send player's neighbors list");
+        logger.info("Sent the player '" + senderId + "' its neighbors list");
     }
 
+    /**
+     * This method returns, for each direction, information about the neighbor of a player.
+     *
+     * @param playerPosition The position of the player.
+     * @return Information about the neighbors of the player.
+     */
     private Map<Direction, PlayerInfos> getPlayerNeighborsMap(Point playerPosition) {
         Map<Direction, PlayerInfos> neighborsList = new HashMap<>();
 
@@ -229,12 +242,18 @@ public class AreaManager extends ClientRabbitMQ {
             Point otherPosition = playerPosition.getNeighbor(direction);
             String playerId = findPlayerIdByPosition(otherPosition);
             PlayerInfos playerInfos = new PlayerInfos(playerId, otherPosition);
-            neighborsList.put(direction,playerInfos);
+            neighborsList.put(direction, playerInfos);
         }
 
         return neighborsList;
     }
 
+    /**
+     * This method returns the ID of a player at a certain position.
+     *
+     * @param playerPosition The position of a player.
+     * @return The player's ID.
+     */
     private String findPlayerIdByPosition(Point playerPosition) {
         for (Map.Entry<String, Point> key : this.players.entrySet()) {
             if (Objects.equals(playerPosition, key.getValue())) {
@@ -243,7 +262,6 @@ public class AreaManager extends ClientRabbitMQ {
         }
         return null;
     }
-
 
     /**
      * When given a point just outside this area's boundary, this method returns the point relative to the area it's

@@ -7,6 +7,7 @@ import game.common.messages.NotifyFreeSpace;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * This class holds the position of each player identified by an ID in the area.
@@ -58,6 +59,10 @@ public class PlayerMap {
 
     public Point get(String key) {
         return this.players.get(key);
+    }
+
+    public Set<Map.Entry<String, Point>> entrySet() {
+        return this.players.entrySet();
     }
 
     public void setAreaPosition(Point areaPosition) {

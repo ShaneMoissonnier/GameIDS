@@ -1,6 +1,9 @@
 package game.common.messages;
 
-public class QueryNeighbors extends Query{
+/**
+ * This message class is used by players to ask their area managers for information about their neighbors.
+ */
+public class QueryNeighbors extends Query {
     public QueryNeighbors(String senderId) {
         super(senderId);
     }
