@@ -74,6 +74,12 @@
                             <arguments>
                                 <argument>${nbAreas}</argument>
                             </arguments>
+                            <systemProperties>
+                                <systemProperty>
+                                    <key>fromTerminal</key>
+                                    <value>1</value>
+                                </systemProperty>
+                            </systemProperties>
                         </configuration>
                     </execution>
 
@@ -84,6 +90,12 @@
                         </goals>
                         <configuration>
                             <mainClass>game.areaManager.AreaManager</mainClass>
+                            <systemProperties>
+                                <systemProperty>
+                                    <key>fromTerminal</key>
+                                    <value>1</value>
+                                </systemProperty>
+                            </systemProperties>
                         </configuration>
                     </execution>
 
@@ -94,6 +106,12 @@
                         </goals>
                         <configuration>
                             <mainClass>game.player.Player</mainClass>
+                            <systemProperties>
+                                <systemProperty>
+                                    <key>fromTerminal</key>
+                                    <value>1</value>
+                                </systemProperty>
+                            </systemProperties>
                         </configuration>
                     </execution>
                 </executions>

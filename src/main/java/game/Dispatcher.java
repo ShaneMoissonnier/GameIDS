@@ -69,13 +69,13 @@ public class Dispatcher extends ClientRabbitMQ {
     }
 
     private void stopSelfStartedAreas() {
-        logger.info("Stopping " + this.nbSelfStartedAreas + " areas started by the dispatcher...");
+        this.logShutdown("Stopping " + this.nbSelfStartedAreas + " areas started by the dispatcher...");
         for (Process p : this.selfStartedAreas) {
             p.destroy();
         }
 
         this.selfStartedAreas.clear();
-        logger.info("Finished stopping areas");
+        this.logShutdown("Finished stopping areas");
     }
 
     private Point findHole() {
