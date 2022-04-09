@@ -45,6 +45,13 @@ public class Interaction implements KeyListener {
             case KeyEvent.VK_RIGHT :
                 direction = Direction.RIGHT;
                 break;
+            case KeyEvent.VK_SPACE:
+                try {
+                    this.player.trySayHello();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+                return;
             default:
                 return;
         }
