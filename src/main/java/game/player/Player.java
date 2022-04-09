@@ -27,6 +27,8 @@ public class Player extends ClientRabbitMQ {
     private String exchangeFanoutQueue;
     private String changeAreaQueue;
     private String tokenNotifyQueue;
+    private String neighborsNotifyQueue;
+    private String helloNotifyQueue;
 
     public Player() throws IOException, TimeoutException {
         super();
@@ -60,6 +62,8 @@ public class Player extends ClientRabbitMQ {
 
         this.changeAreaQueue = this.subscribeToQueue(this.areaDirectExchange, this::changeAreaCallback, this.id + ":change_area");
         this.tokenNotifyQueue = this.subscribeToQueue(this.areaDirectExchange, this::tokenNotifyCallback, this.id + ":token_notify");
+        this.neighborsNotifyQueue = this.subscribeToQueue(this.areaDirectExchange, this::neighborsNotifyCallback, this.id + ":neighbors_notify");
+        this.helloNotifyQueue = this.subscribeToQueue(this.areaDirectExchange, this::helloNotifyCallback, this.id + ":hello_notify");
     }
 
     private void connectToArea(Point areaPosition, Token token, Point position) throws IOException {
@@ -77,6 +81,30 @@ public class Player extends ClientRabbitMQ {
 
         PlayerPresNotif areaNotifMessage = new PlayerPresNotif(this.id, NotificationType.LOGIN);
         channel.basicPublish(this.areaDirectExchange, "area_player_presence", null, areaNotifMessage.toBytes());
+    }
+
+    private void helloNotifyCallback(String consumerTag, Delivery delivery) {
+        QueryHello queryHello = (QueryHello) QueryHello.fromBytes(delivery.getBody());
+        PlayerInfos playerInfos = queryHello.getPlayerInfos();
+        Point playerPosition = playerInfos.getPlayerPosition();
+
+        // TODO : draw something on playerPosition to show hello message
+        logger.info("Player at coordinates "+playerPosition+" said hello!");
+    }
+
+    private void neighborsNotifyCallback(String consumerTag, Delivery delivery) throws IOException {
+        ResponseNeighbors responseNeighbors = (ResponseNeighbors) ResponseNeighbors.fromBytes(delivery.getBody());
+        for (Direction direction : Direction.values()) {
+            PlayerInfos playerInfos = responseNeighbors.getPlayerId(direction);
+            QueryHello queryHello = new QueryHello(this.id, playerInfos);
+
+            this.channel.basicPublish(
+                    this.areaDirectExchange,
+                    playerInfos.getPlayerId() +":hello_notify",
+                    null,
+                    queryHello.toBytes()
+            );
+        }
     }
 
     private void tokenNotifyCallback(String consumerTag, Delivery delivery) {
@@ -101,6 +129,8 @@ public class Player extends ClientRabbitMQ {
         this.channel.queueUnbind(this.exchangeFanoutQueue, this.areaFanoutExchange, this.exchangeFanoutQueue);
         this.channel.queueUnbind(this.changeAreaQueue, this.areaDirectExchange, this.id + ":change_area");
         this.channel.queueUnbind(this.tokenNotifyQueue, this.areaDirectExchange, this.id + ":token_notify");
+        this.channel.queueUnbind(this.neighborsNotifyQueue, this.areaDirectExchange, this.id + ":neighbors_notify");
+        this.channel.queueUnbind(this.helloNotifyQueue, this.areaDirectExchange, this.id + ":hello_notify");
 
         if (notifyArea) {
             PlayerPresNotif notif = new PlayerPresNotif(this.id, NotificationType.LOGOUT);
@@ -131,6 +161,16 @@ public class Player extends ClientRabbitMQ {
         this.channel.basicPublish(
                 this.areaDirectExchange,
                 "area_request_move",
+                null,
+                message.toBytes()
+        );
+    }
+
+    public void trySayHello() throws IOException {
+        QueryNeighbors message = new QueryNeighbors(this.id);
+        this.channel.basicPublish(
+                this.areaDirectExchange,
+                "area_player_neighbors",
                 null,
                 message.toBytes()
         );

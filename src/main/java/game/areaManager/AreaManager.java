@@ -8,11 +8,10 @@ import game.common.Point;
 import game.common.boardModel.BoardModel;
 import game.common.boardModel.Token;
 import game.common.messages.*;
+import game.player.Player;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.TimeoutException;
 
 
@@ -201,7 +200,50 @@ public class AreaManager extends ClientRabbitMQ {
         this.subscribeToQueue(this.DIRECT_NAME, this::playerPresenceCallback, "area_player_presence");
         this.subscribeToQueue(this.DIRECT_NAME, this::playerMoveRequestCallback, "area_request_move");
         this.subscribeToQueue(this.DIRECT_NAME, this::playerFromOtherAreaCallback, "area_from_other");
+        this.subscribeToQueue(this.DIRECT_NAME, this::playerNeighborsCallback, "area_player_neighbors");
     }
+
+    private void playerNeighborsCallback(String consumerTag, Delivery delivery) throws IOException {
+        QueryNeighbors queryNeighbors = (QueryNeighbors) QueryNeighbors.fromBytes(delivery.getBody());
+        String senderId = queryNeighbors.getSenderId();
+        Point playerPosition = players.get(senderId);
+
+        Map<Direction, PlayerInfos> neighborsList = getPlayerNeighborsMap(playerPosition);
+
+        ResponseNeighbors responseNeighbors = new ResponseNeighbors(playerPosition, neighborsList);
+
+        this.channel.basicPublish(
+                DIRECT_NAME,
+                senderId+":neighbors_notify",
+                null,
+                responseNeighbors.toBytes()
+        );
+
+        logger.info("The area at coordinates (" + this.coordinates + ") send player's neighbors list");
+    }
+
+    private Map<Direction, PlayerInfos> getPlayerNeighborsMap(Point playerPosition) {
+        Map<Direction, PlayerInfos> neighborsList = new HashMap<>();
+
+        for (Direction direction : Direction.values()) {
+            Point otherPosition = playerPosition.getNeighbor(direction);
+            String playerId = findPlayerIdByPosition(otherPosition);
+            PlayerInfos playerInfos = new PlayerInfos(playerId, otherPosition);
+            neighborsList.put(direction,playerInfos);
+        }
+
+        return neighborsList;
+    }
+
+    private String findPlayerIdByPosition(Point playerPosition) {
+        for (Map.Entry<String, Point> key : this.players.entrySet()) {
+            if (Objects.equals(playerPosition, key.getValue())) {
+                return key.getKey();
+            }
+        }
+        return null;
+    }
+
 
     /**
      * When given a point just outside this area's boundary, this method returns the point relative to the area it's

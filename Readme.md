@@ -9,7 +9,12 @@
 	<br>
 </div>
 
+## Description
+
 ## Showcase
+<p style="text-align: center">
+  <img src="assets/gifs/Showcase.gif"  alt="Application demo"/>
+</p>
 
 ## Architecture
 
@@ -28,4 +33,21 @@
          sudo rabbitmq-server
     ```
 
+2. Launch the dispatcher with a area number as argument at startup with the following command:
+    ```console
+          mvn exec:java@launch-dispatcher -DnbAreas=<n>
+    ```
+   > If "nbAreas" is equal to zero in this case no areas are launched, then they must be launched manually with the following command:
+   
+   ```console
+         mvn exec:java@launch-area-manager
+   ```
+3. Launch a client (player) with this command:
+    ```console
+         mvn exec:java@launch-player
+    ```
+
 ## Potential future improvements
+
+-   Add rules to make it a real game.
+-   Allow the player to choose the appearance of their character.

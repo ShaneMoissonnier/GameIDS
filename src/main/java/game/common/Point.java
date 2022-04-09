@@ -50,6 +50,14 @@ public class Point implements Serializable {
         }
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof Point))
+            return false;
+        Point point = (Point) obj;
+        return (point.getColumn() == this.getColumn() && point.getRow() == this.getRow());
+    }
+
     /**
      * Given a neighbor point, this method return the direction of the neighbor, relative to this point.
      *

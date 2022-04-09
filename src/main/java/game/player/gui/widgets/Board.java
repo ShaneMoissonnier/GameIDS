@@ -23,6 +23,16 @@ public abstract class Board extends JComponent {
         gPaint.draw(cell);
     }
 
+    public void drawCircle(Color c, int x, int y, int width, int height) {
+        gPaint.setPaint(c);
+        gPaint.fillOval(x, y, width, height);
+    }
+
+    protected void drawText(String text, int x, int y, Color color) {
+        gPaint.setColor(color);
+        gPaint.drawString(text, x, y);
+    }
+
     protected void setBackgroundColor() {
         gPaint.setBackground(Color.DARK_GRAY);
     }
