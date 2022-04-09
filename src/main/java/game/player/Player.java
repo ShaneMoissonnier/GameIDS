@@ -153,10 +153,13 @@ public class Player extends ClientRabbitMQ {
      */
     private void neighborsNotifyCallback(String consumerTag, Delivery delivery) throws IOException {
         ResponseNeighbors responseNeighbors = ResponseNeighbors.fromBytes(delivery.getBody());
+
+        PlayerInfos selfInfo = new PlayerInfos(this.id, responseNeighbors.getPlayerPosition());
+
         for (Direction direction : Direction.values()) {
             /* We say hello to every neighbor. */
             PlayerInfos playerInfos = responseNeighbors.getNeighborInfo(direction);
-            QueryHello queryHello = new QueryHello(this.id, playerInfos);
+            QueryHello queryHello = new QueryHello(this.id, selfInfo);
 
             this.channel.basicPublish(
                     this.areaDirectExchange,

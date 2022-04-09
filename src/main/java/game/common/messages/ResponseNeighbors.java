@@ -24,6 +24,10 @@ public class ResponseNeighbors extends Message {
         this.neighbors = neighbors;
     }
 
+    public Point getPlayerPosition() {
+        return playerPosition;
+    }
+
     public PlayerInfos getNeighborInfo(Direction direction) {
         return this.neighbors.get(direction);
     }
