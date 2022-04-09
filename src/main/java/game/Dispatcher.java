@@ -18,14 +18,20 @@ import java.util.concurrent.TimeoutException;
 public class Dispatcher extends ClientRabbitMQ {
     private final Random random;
 
+    private final int nbSelfStartedAreas;
+    private final List<Process> selfStartedAreas;
+
     private final List<List<Boolean>> areas;
 
-    public Dispatcher() throws IOException, TimeoutException {
+    public Dispatcher(int nbAreas) throws IOException, TimeoutException {
         random = new Random();
 
         areas = new Vector<>();
         areas.add(new Vector<>());
         areas.get(0).add(false);
+
+        nbSelfStartedAreas = nbAreas;
+        selfStartedAreas = new Vector<>();
 
         this.run();
     }
@@ -36,6 +42,8 @@ public class Dispatcher extends ClientRabbitMQ {
 
         this.setupExchanges();
         this.subscribeToQueues();
+
+        this.startAreas();
     }
 
     private void subscribeToQueues() throws IOException {
@@ -45,6 +53,29 @@ public class Dispatcher extends ClientRabbitMQ {
 
     private void setupExchanges() throws IOException {
         this.declareDirectExchange(DISPATCHER_EXCHANGE);
+    }
+
+    private void startAreas() throws IOException {
+        String cmd = "mvn";
+        String arg = "exec:java@launch-area-manager";
+        ProcessBuilder builder = new ProcessBuilder(cmd, arg);
+
+        logger.info("Starting " + this.nbSelfStartedAreas + " areas...");
+        for (int i = 1; i <= this.nbSelfStartedAreas; i++) {
+            this.selfStartedAreas.add(builder.start());
+            logger.info("    - Started " + i + " areas");
+        }
+        logger.info("Finished starting areas");
+    }
+
+    private void stopSelfStartedAreas() {
+        logger.info("Stopping " + this.nbSelfStartedAreas + " areas started by the dispatcher...");
+        for (Process p : this.selfStartedAreas) {
+            p.destroy();
+        }
+
+        this.selfStartedAreas.clear();
+        logger.info("Finished stopping areas");
     }
 
     private Point findHole() {
@@ -124,7 +155,20 @@ public class Dispatcher extends ClientRabbitMQ {
         logger.info("Area at coordinates " + coordinates + " disconnected");
     }
 
+    @Override
+    protected void beforeDisconnect() {
+        this.stopSelfStartedAreas();
+    }
+
     public static void main(String[] args) throws IOException, TimeoutException {
-        new Dispatcher();
+        int nbAreas = 0;
+        if (args.length == 1) {
+            nbAreas = Integer.parseInt(args[0]);
+        } else if (args.length > 0) {
+            System.out.println("Too many arguments. Please only specify the number of areas to be launched by the dispatcher");
+            System.exit(1);
+        }
+
+        new Dispatcher(nbAreas);
     }
 }
