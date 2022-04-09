@@ -9,7 +9,12 @@
 	<br>
 </div>
 
+## Description
+
 ## Showcase
+<p style="text-align: center">
+  <img src="assets/gifs/Showcase.gif"  alt="Application demo"/>
+</p>
 
 ## Architecture
 

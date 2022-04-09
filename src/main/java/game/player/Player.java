@@ -9,7 +9,6 @@ import game.common.messages.*;
 import game.player.gui.Frame;
 
 import javax.swing.*;
-import java.awt.*;
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
@@ -90,6 +89,7 @@ public class Player extends ClientRabbitMQ {
         Point playerPosition = playerInfos.getPlayerPosition();
 
         // TODO : draw something on playerPosition to show hello message
+        logger.info("Player at coordinates "+playerPosition+" said hello!");
     }
 
     private void neighborsNotifyCallback(String consumerTag, Delivery delivery) throws IOException {
