@@ -70,7 +70,7 @@ public class Player extends ClientRabbitMQ {
         this.id = this.subscribeToQueue(DISPATCHER_EXCHANGE, this::dispatcherCallback, null);
 
         QueryPosition queryPosition = new QueryPosition(this.id, SenderType.PLAYER);
-        this.channel.basicPublish(DISPATCHER_EXCHANGE, "dispatcher", null, queryPosition.toBytes());
+        this.channel.basicPublish(DISPATCHER_EXCHANGE, "dispatcher_login", null, queryPosition.toBytes());
     }
 
     /**

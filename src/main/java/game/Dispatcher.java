@@ -73,7 +73,7 @@ public class Dispatcher extends ClientRabbitMQ {
     }
 
     private void subscribeToQueues() throws IOException {
-        this.subscribeToQueue(DISPATCHER_EXCHANGE, this::queryPositionCallback, "dispatcher");
+        this.subscribeToQueue(DISPATCHER_EXCHANGE, this::queryPositionCallback, "dispatcher_login");
         this.subscribeToQueue(DISPATCHER_EXCHANGE, this::areaLogoutCallback, "dispatcher_logout");
         this.subscribeToQueue(DISPATCHER_EXCHANGE, this::notifyFreeSpaceCallback, "dispatcher_notify_free_space");
     }
