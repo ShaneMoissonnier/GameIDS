@@ -52,6 +52,47 @@
             <artifactId>flatlaf</artifactId>
             <version>2.1</version>
         </dependency>
-
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.0.0</version>
+
+                <executions>
+                    <execution>
+                        <id>launch-dispatcher</id>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                        <configuration>
+                            <mainClass>game.Dispatcher</mainClass>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <id>launch-area-manager</id>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                        <configuration>
+                            <mainClass>game.areaManager.AreaManager</mainClass>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <id>launch-player</id>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                        <configuration>
+                            <mainClass>game.player.Player</mainClass>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>
