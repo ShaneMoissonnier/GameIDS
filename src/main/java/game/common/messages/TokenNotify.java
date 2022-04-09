@@ -2,6 +2,11 @@ package game.common.messages;
 
 import game.common.boardModel.Token;
 
+/**
+ * This message class is used by the area manager to transmit a token to a player.
+ * <p>
+ * The player needs its token to transmit it to an area when they are moving from an area to another.
+ */
 public class TokenNotify extends Message {
     private final Token token;
 

@@ -118,7 +118,7 @@ public class Player extends ClientRabbitMQ {
     }
 
     private void changeAreaCallback(String consumerTag, Delivery delivery) throws IOException {
-        ResponseAreaMove responsePosition = ResponseAreaMove.fromBytes(delivery.getBody());
+        ChangeAreaInstruction responsePosition = ChangeAreaInstruction.fromBytes(delivery.getBody());
         Point newArea = responsePosition.getAreaPosition();
         Point newPosition = responsePosition.getPlayerPosition();
 

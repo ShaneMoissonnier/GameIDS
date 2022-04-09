@@ -4,12 +4,29 @@ import game.common.Point;
 
 import java.io.Serializable;
 
+/**
+ * This class represents the grid of an area.
+ */
 public class BoardModel implements Serializable {
+    /**
+     * The position of the area represented by this board model.
+     */
     private Point areaPosition;
 
+    /**
+     * The number of rows.
+     */
     private final int rows = 6;
+
+    /**
+     * The number of columns.
+     */
     private final int columns = 6;
 
+    /**
+     * The actual grid. If grid[i][j] holds a token, the position of the token is Point(i, j).
+     * If grid[i][j] == null, the tile (i, j) is free.
+     */
     private final Token[][] grid;
 
     public BoardModel() {
@@ -41,6 +58,12 @@ public class BoardModel implements Serializable {
         }
     }
 
+    /**
+     * Returns true if a given tile is outside the board's bounds.
+     *
+     * @param position A tile.
+     * @return True if the tile is outside the board.
+     */
     public boolean isOutbounds(Point position) {
         return (position.getRow() >= this.getRows() || position.getRow() < 0 || position.getColumn() >= this.getColumns() || position.getColumn() < 0);
     }

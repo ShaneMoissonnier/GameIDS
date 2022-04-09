@@ -8,12 +8,25 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * This class holds the position of each player identified by an ID in the area.
+ */
 public class PlayerMap {
     private final Channel channel;
+
+    /**
+     * The position of the area using this player map.
+     */
     private Point areaPosition;
 
+    /**
+     * The maximum number of players this map can hold.
+     */
     private final int max_size;
 
+    /**
+     * The mapping from ID to position of the players in the area.
+     */
     private final Map<String, Point> players;
 
     public PlayerMap(Channel channel, int rows, int columns) {
@@ -26,7 +39,7 @@ public class PlayerMap {
         this.players.put(key, value);
 
         if (this.players.size() == max_size) {
-            /* The area is full */
+            /* The area is full => We notify the dispatcher so that it does not send new players in this area. */
             NotifyFreeSpace msg = new NotifyFreeSpace(areaPosition, true);
             this.channel.basicPublish("dispatcher", "dispatcher_notify_free_space", null, msg.toBytes());
         }
@@ -36,7 +49,8 @@ public class PlayerMap {
         this.players.remove(key);
 
         if (this.players.size() == max_size - 1) {
-            /* We removed an element and size is now max_size - 1 => The map was full but is not anymore */
+            /* We removed an element and size is now max_size - 1 => The map was full but is not anymore.
+             * We notify the dispatcher so that it can send new players in this area if it so decides. */
             NotifyFreeSpace msg = new NotifyFreeSpace(areaPosition, false);
             this.channel.basicPublish("dispatcher", "dispatcher_notify_free_space", null, msg.toBytes());
         }
