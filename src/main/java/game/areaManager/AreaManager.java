@@ -26,7 +26,7 @@ public class AreaManager extends ClientRabbitMQ {
 
     private Point coordinates;
 
-    private final Map<String, Point> players;
+    private final PlayerMap players;
     private final BoardModel boardModel;
 
     private final Map<Direction, Boolean> neighborsPresent;
@@ -34,7 +34,7 @@ public class AreaManager extends ClientRabbitMQ {
     public AreaManager() throws IOException, TimeoutException {
         super();
 
-        this.players = new HashMap<>();
+        this.players = new PlayerMap(this.channel, N_ROWS, N_COLUMNS);
         this.neighborsPresent = new HashMap<>();
 
         boardModel = new BoardModel();
@@ -75,6 +75,7 @@ public class AreaManager extends ClientRabbitMQ {
         this.coordinates = response.getPosition();
         this.DIRECT_NAME = this.coordinates + ":direct";
         this.FANOUT_NAME = this.coordinates + ":fanout";
+        this.players.setAreaPosition(coordinates);
         logger.info("Received position : " + this.coordinates);
         this.afterDispatch();
     }

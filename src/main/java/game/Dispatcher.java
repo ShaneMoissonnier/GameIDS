@@ -3,16 +3,10 @@ package game;
 import com.rabbitmq.client.Delivery;
 import game.common.ClientRabbitMQ;
 import game.common.Point;
-import game.common.messages.AreaPresNotif;
-import game.common.messages.QueryPosition;
-import game.common.messages.ResponsePosition;
-import game.common.messages.SenderType;
+import game.common.messages.*;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Random;
-import java.util.Vector;
+import java.util.*;
 import java.util.concurrent.TimeoutException;
 
 public class Dispatcher extends ClientRabbitMQ {
@@ -22,6 +16,7 @@ public class Dispatcher extends ClientRabbitMQ {
     private final List<Process> selfStartedAreas;
 
     private final List<List<Boolean>> areas;
+    private final List<Point> areasWithFreeSpace;
 
     public Dispatcher(int nbAreas) throws IOException, TimeoutException {
         random = new Random();
@@ -32,6 +27,7 @@ public class Dispatcher extends ClientRabbitMQ {
 
         nbSelfStartedAreas = nbAreas;
         selfStartedAreas = new Vector<>();
+        areasWithFreeSpace = new Vector<>();
 
         this.run();
     }
@@ -49,6 +45,7 @@ public class Dispatcher extends ClientRabbitMQ {
     private void subscribeToQueues() throws IOException {
         this.subscribeToQueue(DISPATCHER_EXCHANGE, this::queryPositionCallback, "dispatcher");
         this.subscribeToQueue(DISPATCHER_EXCHANGE, this::areaLogoutCallback, "dispatcher_logout");
+        this.subscribeToQueue(DISPATCHER_EXCHANGE, this::notifyFreeSpaceCallback, "dispatcher_notify_free_space");
     }
 
     private void setupExchanges() throws IOException {
@@ -95,18 +92,8 @@ public class Dispatcher extends ClientRabbitMQ {
     }
 
     private Point randomArea() {
-        int row_max = areas.size();
-        int col_max = areas.get(0).size();
-
-        int row;
-        int col;
-
-        do {
-            row = random.nextInt(row_max);
-            col = random.nextInt(col_max);
-        } while (!this.areas.get(row).get(col));
-
-        return new Point(row, col);
+        int index = random.nextInt(this.areasWithFreeSpace.size());
+        return areasWithFreeSpace.get(index);
     }
 
     private void resizeZones() {
@@ -144,6 +131,7 @@ public class Dispatcher extends ClientRabbitMQ {
             logger.info("A player logged in, redirecting to area at position " + res);
         }
 
+        this.areasWithFreeSpace.add(res);
         ResponsePosition response = new ResponsePosition(res);
         this.channel.basicPublish(DISPATCHER_EXCHANGE, query.getSenderId(), null, response.toBytes());
     }
@@ -152,7 +140,19 @@ public class Dispatcher extends ClientRabbitMQ {
         AreaPresNotif msg = AreaPresNotif.fromBytes(delivery.getBody());
         Point coordinates = msg.getPosition();
         this.areas.get(coordinates.getRow()).set(coordinates.getColumn(), false);
+        this.areasWithFreeSpace.remove(coordinates);
         logger.info("Area at coordinates " + coordinates + " disconnected");
+    }
+
+    private void notifyFreeSpaceCallback(String consumerTag, Delivery delivery) {
+        NotifyFreeSpace msg = NotifyFreeSpace.fromBytes(delivery.getBody());
+
+        Point areaPosition = msg.getAreaPosition();
+        if (msg.isFull()) {
+            this.areasWithFreeSpace.remove(areaPosition);
+        } else {
+            this.areasWithFreeSpace.add(areaPosition);
+        }
     }
 
     @Override
