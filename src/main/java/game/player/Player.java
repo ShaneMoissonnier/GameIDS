@@ -70,7 +70,7 @@ public class Player extends ClientRabbitMQ {
         this.id = this.subscribeToQueue(DISPATCHER_EXCHANGE, this::dispatcherCallback, null);
 
         QueryPosition queryPosition = new QueryPosition(this.id, SenderType.PLAYER);
-        this.channel.basicPublish(DISPATCHER_EXCHANGE, "dispatcher", null, queryPosition.toBytes());
+        this.channel.basicPublish(DISPATCHER_EXCHANGE, "dispatcher_login", null, queryPosition.toBytes());
     }
 
     /**
@@ -153,10 +153,13 @@ public class Player extends ClientRabbitMQ {
      */
     private void neighborsNotifyCallback(String consumerTag, Delivery delivery) throws IOException {
         ResponseNeighbors responseNeighbors = ResponseNeighbors.fromBytes(delivery.getBody());
+
+        PlayerInfos selfInfo = new PlayerInfos(this.id, responseNeighbors.getPlayerPosition());
+
         for (Direction direction : Direction.values()) {
             /* We say hello to every neighbor. */
             PlayerInfos playerInfos = responseNeighbors.getNeighborInfo(direction);
-            QueryHello queryHello = new QueryHello(this.id, playerInfos);
+            QueryHello queryHello = new QueryHello(this.id, selfInfo);
 
             this.channel.basicPublish(
                     this.areaDirectExchange,

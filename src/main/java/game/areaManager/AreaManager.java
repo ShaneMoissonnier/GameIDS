@@ -115,7 +115,7 @@ public class AreaManager extends ClientRabbitMQ {
      */
     private void interactWithDispatcher() throws IOException {
         String key = this.subscribeToQueue(DISPATCHER_EXCHANGE, this::dispatcherCallback, null);
-        this.channel.basicPublish(DISPATCHER_EXCHANGE, "dispatcher", null, new QueryPosition(key, SenderType.AREA).toBytes());
+        this.channel.basicPublish(DISPATCHER_EXCHANGE, "dispatcher_login", null, new QueryPosition(key, SenderType.AREA).toBytes());
     }
 
     /**
